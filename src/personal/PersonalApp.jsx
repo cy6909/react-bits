@@ -19,7 +19,6 @@ import {
   X
 } from 'lucide-react';
 import { catalog, categoryLabels, descriptionsZh, filterCatalog } from './catalog';
-import { prompts, promptNames } from './prompts';
 import { LocaleProvider, useLocale } from './Locale';
 import { copyText } from '../utils/aiExport';
 import './personal.css';
@@ -249,16 +248,15 @@ function Library({ saved, toggleSaved }) {
   const query = params.get('q') || '';
   const category = params.get('category') || 'all';
   const savedOnly = params.get('saved') === '1';
-  const promptOnly = params.get('prompt') === '1';
   const update = (key, value) => {
     const p = new URLSearchParams(params);
     if (value) p.set(key, value);
     else p.delete(key);
     setParams(p, { replace: true });
   };
-  useEffect(() => setLimit(24), [query, category, savedOnly, promptOnly]);
-  const items = filterCatalog(catalog, { query, category, savedOnly, saved, promptOnly, promptNames });
-  const hero = !query && category === 'all' && !savedOnly && !promptOnly;
+  useEffect(() => setLimit(24), [query, category, savedOnly]);
+  const items = filterCatalog(catalog, { query, category, savedOnly, saved });
+  const hero = !query && category === 'all' && !savedOnly;
   useEffect(() => {
     document.title = t('UI / Bits · 我的动效收藏库', 'UI / Bits · Personal collection');
   }, [locale, t]);
@@ -338,14 +336,6 @@ function Library({ saved, toggleSaved }) {
               ))}
             </select>
           </label>
-          <button
-            aria-pressed={promptOnly}
-            className={`uie-filter ${promptOnly ? 'selected' : ''}`}
-            onClick={() => update('prompt', promptOnly ? '' : '1')}
-          >
-            <Sparkles size={15} />
-            {t('有复现描述', 'With recreation spec')}
-          </button>
         </div>
         <div className="uie-grid">
           {items.slice(0, limit).map(item => (
@@ -503,7 +493,33 @@ function DetailContent({ item, saved, toggleSaved }) {
   const [tab, setTab] = useState('preview');
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState('playing');
-  const prompt = prompts[item.name]?.[locale];
+  const frameRef = useRef(null);
+  const [originalPrompts, setOriginalPrompts] = useState(null);
+  const [promptLanguage, setPromptLanguage] = useState(locale);
+  const [promptFailed, setPromptFailed] = useState(false);
+  useEffect(() => setPromptLanguage(locale), [locale]);
+  useEffect(() => {
+    const receive = event => {
+      if (event.origin !== window.location.origin || event.source !== frameRef.current?.contentWindow) return;
+      const data = event.data;
+      if (
+        data?.type !== 'uie:upstream-prompt' ||
+        data.componentName !== item.name ||
+        typeof data.en !== 'string' ||
+        typeof data.zh !== 'string'
+      )
+        return;
+      setOriginalPrompts({ en: data.en, zh: data.zh, variant: data.variant });
+      setPromptFailed(false);
+    };
+    window.addEventListener('message', receive);
+    return () => window.removeEventListener('message', receive);
+  }, [item.name]);
+  useEffect(() => {
+    if (tab !== 'prompt' || originalPrompts) return;
+    const timer = setTimeout(() => setPromptFailed(true), 15000);
+    return () => clearTimeout(timer);
+  }, [tab, originalPrompts, round]);
   useEffect(() => {
     document.title = `${locale === 'zh' ? item.titleZh : item.name} · UI / Bits`;
   }, [item, locale]);
@@ -540,7 +556,7 @@ function DetailContent({ item, saved, toggleSaved }) {
         {[
           ['preview', t('效果预览', 'Preview'), Play],
           ['source', t('组件源码', 'Source'), Code2],
-          ['prompt', t('复现提示词', 'Recreation prompt'), Sparkles]
+          ['prompt', t('原版提示词', 'Original prompt'), Sparkles]
         ].map(([key, label, Icon]) => (
           <button
             role="tab"
@@ -571,6 +587,7 @@ function DetailContent({ item, saved, toggleSaved }) {
             </div>
             {phase === 'playing' ? (
               <iframe
+                ref={frameRef}
                 key={`${item.id}-${round}-${locale}`}
                 className="uie-demo-frame"
                 title={`${item.name} ${t('交互演示', 'interactive demo')}`}
@@ -596,7 +613,7 @@ function DetailContent({ item, saved, toggleSaved }) {
                   </button>
                   <button className="uie-action" onClick={() => setTab('prompt')}>
                     <Sparkles size={16} />
-                    {t('查看复现提示词', 'Recreation prompt')}
+                    {t('查看原版提示词', 'Original prompt')}
                   </button>
                   <button className="uie-action" onClick={() => setTab('source')}>
                     <Code2 size={16} />
@@ -617,45 +634,71 @@ function DetailContent({ item, saved, toggleSaved }) {
         {tab === 'prompt' && (
           <div className="uie-prompt">
             <div className="uie-prompt-heading">
-              <h2>{t('独立复现描述', 'Standalone recreation spec')}</h2>
-              <span className="uie-status">{t('尚未验证', 'Not verified')}</span>
+              <h2>{t('React Bits 原版提示词', 'Original React Bits prompt')}</h2>
             </div>
             <p>
               {t(
-                '仅提供视觉与行为描述，不附带上游源码。当前展示的效果来自 React Bits，不能视为这份提示词的生成结果。',
-                'This specification describes visuals and behavior without upstream source. The displayed demo is from React Bits, not evidence of a result generated from this prompt.'
+                '使用上游 Copy prompt 的原始内容，包含当前演示配置、依赖、参数、完整源码与集成步骤。英文保持原文；中文翻译说明和步骤，代码及参数说明保留上游原文。',
+                'Uses the upstream Copy prompt, including configured usage, dependencies, properties, full source and integration steps. English is unchanged; Chinese translates the instructions while preserving code and property descriptions.'
               )}
             </p>
-            <dl className="uie-provenance">
-              {[
-                ['Agent', '—'],
-                [t('模型', 'Model'), '—'],
-                [t('思考等级', 'Reasoning'), '—'],
-                [t('一次生成', 'First-pass'), t('未执行', 'Not run')]
-              ].map(([key, value]) => (
-                <div key={key}>
-                  <dt>{key}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-            {prompt ? (
+            <div className="uie-prompt-languages" role="group" aria-label={t('提示词语言', 'Prompt language')}>
+              <button
+                className="uie-action"
+                aria-pressed={promptLanguage === 'zh'}
+                onClick={() => setPromptLanguage('zh')}
+              >
+                中文
+              </button>
+              <button
+                className="uie-action"
+                aria-pressed={promptLanguage === 'en'}
+                onClick={() => setPromptLanguage('en')}
+              >
+                English
+              </button>
+              {originalPrompts && <span>{originalPrompts.variant}</span>}
+            </div>
+            {originalPrompts ? (
               <>
-                <CopyButton key={locale} text={prompt} label={t('复制复现描述', 'Copy recreation spec')} />
-                <pre tabIndex={0}>{prompt}</pre>
+                <CopyButton
+                  key={promptLanguage + originalPrompts.variant}
+                  text={originalPrompts[promptLanguage]}
+                  label={t('复制原版提示词', 'Copy original prompt')}
+                />
+                <pre tabIndex={0}>{originalPrompts[promptLanguage]}</pre>
               </>
-            ) : (
+            ) : promptFailed ? (
               <div className="uie-empty">
-                <Sparkles size={28} />
-                <h3>{t('这份复现描述还在等待整理', 'A recreation spec has not been authored yet')}</h3>
                 <p>
                   {t(
-                    '你仍然可以从“组件源码”获取完整实现。',
-                    'You can still get the complete implementation in Source.'
+                    '暂时无法读取此演示的原版提示词。可返回预览，或重新加载。',
+                    'The demo prompt could not be read. Return to the preview or reload it.'
                   )}
                 </p>
-                <button onClick={() => setTab('source')}>{t('查看组件源码', 'View source')}</button>
+                <button
+                  onClick={() => {
+                    setPromptFailed(false);
+                    setRound(x => x + 1);
+                  }}
+                >
+                  {t('重新读取', 'Retry')}
+                </button>
               </div>
+            ) : (
+              <>
+                <p role="status">
+                  {t('正在读取上游演示的原版提示词…', 'Reading the original prompt from the upstream demo…')}
+                </p>
+                <iframe
+                  ref={frameRef}
+                  key={`${item.id}-prompt-${round}`}
+                  hidden
+                  title="Original prompt loader"
+                  src={`/preview${item.path}?lang=${locale}`}
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              </>
             )}
           </div>
         )}

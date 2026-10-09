@@ -3,15 +3,15 @@
 A Chinese-first personal library built on React Bits. Original component implementations and the upstream license remain intact.
 
 - Browse 215 imported components with Chinese names, bilingual navigation, category/search filters and local favorites.
-- Preview upstream demos, finish/replay a session, inspect/download source variants, or read standalone recreation specifications.
-- Recreation specifications are **unverified candidates**. No agent/model/reasoning result is inferred from upstream demos.
+- Preview upstream demos, finish/replay a session, inspect/download source variants, or copy the original upstream prompt in English or Chinese.
+- Prompts use the upstream Copy prompt template. English is unchanged; Chinese translates its instructions. Source code, dependencies and API property descriptions remain verbatim.
 - Source editing is local; installation, build, browser tests and Docker deployment run only on `10.89.2.12`.
 - Personal entry: `src/personal/PersonalApp.jsx`. Build on machine 12 with `npm ci` and `npm run build:personal`.
 - Container deployment: `UIE_BIND_ADDRESS=10.89.2.12 docker compose -f compose.personal.yaml up -d --build` (default port 18120).
 - Optional poster regeneration on machine 12 requires FFmpeg: `node scripts/generatePersonalPosters.mjs`.
 - Project knowledge: https://app.notion.com/p/3f490f837c9581998619fc1bad80b228
 
-Component descriptions and some upstream demo controls remain in English. Chinese titles and the personal shell cover all catalog entries; the first three recreation specs have Chinese and English versions. This is not an official React Bits translation.
+Component descriptions and some upstream demo controls remain in English. Chinese titles and the personal shell cover all catalog entries; the original Copy prompt supports both Chinese and English. This is not an official React Bits translation.
 
 ## Upstream project
 

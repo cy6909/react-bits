@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { componentMetadata } from '../src/constants/Information.js';
-import { prompts, provenance } from '../src/personal/prompts.js';
 import { createHash } from 'node:crypto';
 
 const output = path.resolve('public/personal-registry');
 fs.mkdirSync(output, { recursive: true });
 const hash = text => createHash('sha256').update(text).digest('hex');
+const template = fs.readFileSync('src/personal/upstreamPrompt.js', 'utf8');
+fs.writeFileSync(path.join(output, 'upstreamPrompt.js'), template);
 const items = Object.values(componentMetadata).map(item => {
   const variants = item.variants || ['JS-CSS', 'JS-TW', 'TS-CSS', 'TS-TW'];
   const sources = variants.map(variant => {
@@ -22,9 +23,8 @@ const items = Object.values(componentMetadata).map(item => {
       dependencies: registry.dependencies || []
     };
   });
-  const spec = prompts[item.name];
   const entry = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: `${item.category}/${item.name}`,
     name: item.name,
     category: item.category,
@@ -34,15 +34,19 @@ const items = Object.values(componentMetadata).map(item => {
     upstreamCommit: '7b69ba117ca7876dc9ca5ff3c09cf514de4b2d62',
     license: '/LICENSE.md',
     sources,
-    prompts: spec
-      ? Object.fromEntries(
-          Object.entries(spec).map(([lang, content]) => [
-            lang,
-            { content, sha256: hash(content), status: 'unverified' }
-          ])
-        )
-      : {},
-    generation: provenance
+    prompt: {
+      kind: 'upstream-source-assisted-integration',
+      languages: ['en', 'zh'],
+      english: 'Original React Bits Copy prompt template; unchanged English instructions.',
+      chinese:
+        'Translation of upstream instructions; source, dependency strings and property descriptions stay verbatim.',
+      templateUrl: '/personal-registry/upstreamPrompt.js',
+      templateSha256: hash(template),
+      usage:
+        'The live demo supplies configured usage, props, source and selected code variant to the template. Open Original prompt in the component detail or Copy for AI in the preview.',
+      originalSource:
+        'https://github.com/DavidHDev/react-bits/blob/7b69ba117ca7876dc9ca5ff3c09cf514de4b2d62/src/components/common/TabsLayout.jsx'
+    }
   };
   fs.writeFileSync(path.join(output, `${item.name}.json`), JSON.stringify(entry, null, 2) + '\n');
   return {
@@ -50,14 +54,13 @@ const items = Object.values(componentMetadata).map(item => {
     name: item.name,
     category: item.category,
     path: entry.path,
-    hasRecreationSpec: Boolean(spec),
     url: `/personal-registry/${item.name}.json`
   };
 });
-fs.writeFileSync(path.join(output, 'index.json'), JSON.stringify({ schemaVersion: 1, items }, null, 2) + '\n');
+fs.writeFileSync(path.join(output, 'index.json'), JSON.stringify({ schemaVersion: 2, items }, null, 2) + '\n');
 fs.copyFileSync('LICENSE.md', 'public/LICENSE.md');
 fs.writeFileSync(
   'public/llms.txt',
-  `# UI / Bits — Personal React Bits library\n\nRead /personal-registry/index.json to discover ${items.length} components. Follow each item URL for variant-specific source bundles, dependencies, SHA-256 checksums, license and provenance. Resolve relative URLs against the serving origin.\n\nRecreation prompts are authored candidates, not validated generation outcomes. Upstream demos are not generated from these prompts. Unknown model, agent and reasoning fields are null. Source-assisted integration and prompt-only recreation are different workflows.\n\nUpstream: https://github.com/DavidHDev/react-bits\nPersonal fork: https://github.com/cy6909/react-bits\nLicense: /LICENSE.md\n`
+  `# UI / Bits — Personal React Bits library\n\nRead /personal-registry/index.json to discover ${items.length} components. Follow each item URL for source variants, dependencies, SHA-256 checksums and license. Resolve relative URLs against this origin.\n\nPrompts use the original React Bits Copy prompt. English is unchanged. Chinese translates its instructions while preserving source code, dependency names, API values and property descriptions. These prompts integrate supplied source; no invented standalone recreation specifications or model-generation claims are included. The live UI builds the prompt from the selected demo configuration; the reusable template is /personal-registry/upstreamPrompt.js.\n\nUpstream: https://github.com/DavidHDev/react-bits\nPersonal fork: https://github.com/cy6909/react-bits\nLicense: /LICENSE.md\n`
 );
-console.log(`Exported ${items.length} entries; ${Object.keys(prompts).length} unverified recreation specs.`);
+console.log(`Exported ${items.length} entries using upstream bilingual prompt templates.`);

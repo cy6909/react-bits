@@ -258,10 +258,7 @@ export const catalog = Object.values(componentMetadata)
     return rank(a) - rank(b) || a.name.localeCompare(b.name);
   });
 
-export function filterCatalog(
-  items,
-  { query = '', category = 'all', savedOnly = false, saved = [], promptOnly = false, promptNames = [] } = {}
-) {
+export function filterCatalog(items, { query = '', category = 'all', savedOnly = false, saved = [] } = {}) {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   return items.filter(item => {
     const haystack = [
@@ -277,7 +274,6 @@ export function filterCatalog(
     return (
       (category === 'all' || category === item.category) &&
       (!savedOnly || saved.includes(item.id)) &&
-      (!promptOnly || promptNames.includes(item.name)) &&
       terms.every(term => haystack.includes(term))
     );
   });

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { catalog, filterCatalog, titlesZh } from './catalog.js';
-import { prompts, provenance } from './prompts.js';
+import { buildPrompt, buildPromptZh } from './upstreamPrompt.js';
 
 test('all imported entries have unique routes, stable IDs and Chinese names', () => {
   assert.equal(new Set(catalog.map(x => x.id)).size, catalog.length);
@@ -11,22 +11,40 @@ test('all imported entries have unique routes, stable IDs and Chinese names', ()
     assert.ok(item.path.startsWith('/'));
   }
 });
-test('Chinese and English search compose with category, saved and prompt filters', () => {
+test('Chinese and English search compose with category and saved filters', () => {
   assert.equal(filterCatalog(catalog, { query: '纵深 轮播' })[0].name, 'DepthCarousel');
   assert.equal(filterCatalog(catalog, { query: 'DEPTHCAROUSEL' })[0].titleZh, '纵深轮播');
   assert.equal(filterCatalog(catalog, { query: '纵深', category: 'Backgrounds' }).length, 0);
   assert.equal(filterCatalog(catalog, { savedOnly: true, saved: [] }).length, 0);
-  assert.equal(filterCatalog(catalog, { promptOnly: true, promptNames: Object.keys(prompts) }).length, 3);
   assert.equal(filterCatalog(catalog, { query: 'no-such-component-zyx' }).length, 0);
 });
-test('imported demos cannot masquerade as completed prompt-only runs', () => {
-  assert.equal(provenance.origin, 'upstream');
-  assert.equal(provenance.reproductionStatus, 'unverified');
-  for (const field of ['agent', 'model', 'reasoningEffort', 'skillsLoaded', 'attempts'])
-    assert.equal(provenance[field], null);
-  for (const name of Object.keys(prompts)) {
-    assert.ok(catalog.some(x => x.name === name));
-    assert.ok(prompts[name].zh.length > 400);
-    assert.ok(prompts[name].en.length > 400);
+test('translated prompts preserve upstream code blocks, dependencies and props in all variants', () => {
+  const code = {
+    code: 'JS SOURCE',
+    tsCode: 'TS SOURCE',
+    tailwind: 'JS TW SOURCE',
+    tsTailwind: 'TS TW SOURCE',
+    css: '.original { color: red }',
+    usage: '<Original count={12} />',
+    dependencies: 'gsap motion'
+  };
+  const props = [{ name: 'count', type: 'number', default: '12', description: 'Original property description' }];
+  for (const [lang, style, source] of [
+    ['JS', 'CSS', code.code],
+    ['TS', 'CSS', code.tsCode],
+    ['JS', 'TW', code.tailwind],
+    ['TS', 'TW', code.tsTailwind]
+  ]) {
+    const en = buildPrompt('Original', code, props, lang, style);
+    const zh = buildPromptZh('Original', code, props, lang, style);
+    const blocks = text => [...text.matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map(x => x[1]);
+    assert.deepEqual(blocks(en), blocks(zh));
+    for (const text of [en, zh]) {
+      assert.ok(text.includes(source));
+      assert.ok(text.includes(code.dependencies));
+      assert.ok(text.includes('| count | number | 12 | Original property description |'));
+    }
+    assert.ok(en.startsWith('## Integrate the <Original /> component from React Bits'));
+    assert.ok(zh.startsWith('## 集成 React Bits 的 <Original /> 组件'));
   }
 });

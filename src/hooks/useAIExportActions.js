@@ -13,6 +13,7 @@ export function useAIExportActions({
   category,
   subcategory,
   fullPrompt,
+  fullPromptZh,
   configuredUsage,
   componentSource,
   componentCss,
@@ -51,8 +52,14 @@ export function useAIExportActions({
 
     return [
       {
+        key: 'prompt-zh',
+        label: t('复制原版提示词 · 中文', 'Copy original prompt · Chinese'),
+        icon: Sparkles,
+        run: () => run('prompt-zh', fullPromptZh, t('中文提示词已复制', 'Chinese prompt copied'))
+      },
+      {
         key: 'prompt',
-        label: t('复制集成提示（含源码）', 'Copy integration prompt (with source)'),
+        label: t('复制原版提示词 · English', 'Copy original prompt · English'),
         icon: Sparkles,
         run: () => run('prompt', fullPrompt, 'Prompt copied — paste into any AI assistant')
       },
@@ -75,7 +82,7 @@ export function useAIExportActions({
         run: () => run('install', installCommand, 'Install command copied')
       }
     ];
-  }, [componentName, componentCss, componentSource, fullPrompt, configuredUsage, installCommand, run, t]);
+  }, [componentName, componentCss, componentSource, fullPrompt, fullPromptZh, configuredUsage, installCommand, run, t]);
 
   const openItems = useMemo(() => {
     const compactPrompt = buildCompactPrompt({

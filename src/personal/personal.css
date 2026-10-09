@@ -848,6 +848,19 @@
   object-fit: cover;
   z-index: 0;
 }
+.uie-prompt-languages {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  color: #8b8099;
+  font-size: 11px;
+}
+.uie-prompt-languages button[aria-pressed='true'] {
+  background: #463255;
+  border-color: #b293ce;
+  color: #fff !important;
+}
 .uie-frame-body {
   padding: 18px;
   background: #111115 !important;
