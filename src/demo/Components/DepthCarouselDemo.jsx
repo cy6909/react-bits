@@ -1,3 +1,4 @@
+import { useLocale } from '../../personal/Locale';
 import { useMemo } from 'react';
 import { Box } from '@chakra-ui/react';
 import { CodeTab, PreviewTab, TabsLayout } from '../../components/common/TabsLayout';
@@ -17,13 +18,13 @@ import { depthCarousel } from '../../constants/code/Components/depthCarouselCode
 import DepthCarousel from '../../content/Components/DepthCarousel/DepthCarousel';
 
 const ITEMS = [
-  { image: 'https://picsum.photos/seed/dc-alto/800/1000', alt: 'Alto' },
-  { image: 'https://picsum.photos/seed/dc-bay/800/1000', alt: 'Bay' },
-  { image: 'https://picsum.photos/seed/dc-coast/800/1000', alt: 'Coast' },
-  { image: 'https://picsum.photos/seed/dc-dune/800/1000', alt: 'Dune' },
-  { image: 'https://picsum.photos/seed/dc-edge/800/1000', alt: 'Edge' },
-  { image: 'https://picsum.photos/seed/dc-fjord/800/1000', alt: 'Fjord' },
-  { image: 'https://picsum.photos/seed/dc-glade/800/1000', alt: 'Glade' }
+  { image: '/assets/demo/day-portrait.webp', alt: 'Alto' },
+  { image: '/assets/demo/night-portrait.webp', alt: 'Bay' },
+  { image: '/assets/demo/day-landscape.webp', alt: 'Coast' },
+  { image: '/assets/demo/night-landscape.webp', alt: 'Dune' },
+  { image: '/assets/demo/cs1.webp', alt: 'Edge' },
+  { image: '/assets/demo/cs2.webp', alt: 'Fjord' },
+  { image: '/assets/demo/cs3.webp', alt: 'Glade' }
 ];
 
 const EASE_OPTIONS = [
@@ -62,6 +63,7 @@ const DEFAULT_PROPS = {
 };
 
 const DepthCarouselDemo = () => {
+  const { t } = useLocale();
   const { props, updateProp, resetProps, hasChanges } = useComponentProps(DEFAULT_PROPS);
   const {
     cardWidth,
@@ -228,9 +230,13 @@ const DepthCarouselDemo = () => {
           </Box>
 
           <Customize>
-            <PreviewColorPickerCustom title="Depth Tint" color={tint} onChange={val => updateProp('tint', val)} />
+            <PreviewColorPickerCustom
+              title={t('纵深色调', 'Depth Tint')}
+              color={tint}
+              onChange={val => updateProp('tint', val)}
+            />
             <PreviewSlider
-              title="Card Width"
+              title={t('卡片宽度', 'Card Width')}
               min={180}
               max={420}
               step={10}
@@ -239,7 +245,7 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('cardWidth', val)}
             />
             <PreviewSlider
-              title="Card Height"
+              title={t('卡片高度', 'Card Height')}
               min={220}
               max={520}
               step={10}
@@ -248,7 +254,7 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('cardHeight', val)}
             />
             <PreviewSlider
-              title="Corner Radius"
+              title={t('圆角', 'Corner Radius')}
               min={0}
               max={48}
               step={1}
@@ -258,7 +264,7 @@ const DepthCarouselDemo = () => {
             />
 
             <PreviewSlider
-              title="Depth"
+              title={t('纵深距离', 'Depth')}
               min={80}
               max={420}
               step={10}
@@ -267,7 +273,7 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('depth', val)}
             />
             <PreviewSlider
-              title="Spread"
+              title={t('水平间距', 'Spread')}
               min={0}
               max={220}
               step={5}
@@ -276,7 +282,7 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('spread', val)}
             />
             <PreviewSlider
-              title="Tilt"
+              title={t('倾斜角度', 'Tilt')}
               min={0}
               max={60}
               step={1}
@@ -285,13 +291,13 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('tilt', val)}
             />
             <PreviewSelect
-              title="Tilt Direction"
+              title={t('倾斜方向', 'Tilt Direction')}
               options={TILT_OPTIONS}
               value={tiltDirection}
               onChange={val => updateProp('tiltDirection', val)}
             />
             <PreviewSlider
-              title="Perspective"
+              title={t('透视距离', 'Perspective')}
               min={600}
               max={2400}
               step={50}
@@ -300,7 +306,7 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('perspective', val)}
             />
             <PreviewSlider
-              title="Visible Cards"
+              title={t('可见卡片', 'Visible Cards')}
               min={2}
               max={6}
               step={1}
@@ -308,7 +314,7 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('visibleCards', val)}
             />
             <PreviewSlider
-              title="Falloff"
+              title={t('透明度衰减', 'Falloff')}
               min={0.05}
               max={0.5}
               step={0.01}
@@ -316,7 +322,7 @@ const DepthCarouselDemo = () => {
               onChange={val => updateProp('falloff', val)}
             />
             <PreviewSlider
-              title="Blur"
+              title={t('模糊', 'Blur')}
               min={0}
               max={16}
               step={1}
@@ -326,7 +332,7 @@ const DepthCarouselDemo = () => {
             />
 
             <PreviewSlider
-              title="Duration"
+              title={t('动画时长', 'Duration')}
               min={200}
               max={1400}
               step={50}
@@ -334,10 +340,19 @@ const DepthCarouselDemo = () => {
               valueUnit="ms"
               onChange={val => updateProp('duration', val)}
             />
-            <PreviewSelect title="Ease" options={EASE_OPTIONS} value={ease} onChange={val => updateProp('ease', val)} />
-            <PreviewSwitch title="Autoplay" isChecked={autoplay} onChange={val => updateProp('autoplay', val)} />
+            <PreviewSelect
+              title={t('缓动', 'Ease')}
+              options={EASE_OPTIONS}
+              value={ease}
+              onChange={val => updateProp('ease', val)}
+            />
+            <PreviewSwitch
+              title={t('自动播放', 'Autoplay')}
+              isChecked={autoplay}
+              onChange={val => updateProp('autoplay', val)}
+            />
             <PreviewSlider
-              title="Autoplay Delay"
+              title={t('播放间隔', 'Autoplay Delay')}
               min={1200}
               max={6000}
               step={100}
@@ -346,14 +361,14 @@ const DepthCarouselDemo = () => {
               isDisabled={!autoplay}
               onChange={val => updateProp('autoplayDelay', val)}
             />
-            <PreviewSwitch title="Loop" isChecked={loop} onChange={val => updateProp('loop', val)} />
+            <PreviewSwitch title={t('循环', 'Loop')} isChecked={loop} onChange={val => updateProp('loop', val)} />
             <PreviewSwitch
-              title="Controls"
+              title={t('切换按钮', 'Controls')}
               isChecked={showControls}
               onChange={val => updateProp('showControls', val)}
             />
             <PreviewSwitch
-              title="Indicators"
+              title={t('圆点指示', 'Indicators')}
               isChecked={showIndicators}
               onChange={val => updateProp('showIndicators', val)}
             />

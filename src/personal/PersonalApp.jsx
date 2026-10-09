@@ -1,0 +1,708 @@
+import { Component, Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { BrowserRouter, Link, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Code2,
+  Copy,
+  Github,
+  Grid2X2,
+  Heart,
+  Layers,
+  Menu,
+  Play,
+  RotateCcw,
+  Search,
+  Sparkles,
+  X
+} from 'lucide-react';
+import { catalog, categoryLabels, descriptionsZh, filterCatalog } from './catalog';
+import { prompts, promptNames } from './prompts';
+import { LocaleProvider, useLocale } from './Locale';
+import { copyText } from '../utils/aiExport';
+import './personal.css';
+
+const DemoFrame = lazy(() => import('./DemoFrame'));
+const SOURCE_URL = 'https://github.com/cy6909/react-bits';
+const readSaved = () => {
+  try {
+    const v = JSON.parse(localStorage.getItem('uie-saved') || '[]');
+    return Array.isArray(v) ? v.filter(x => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+export class DemoBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? (
+      <div className="uie-empty">
+        <h2>演示暂时不可用 / Preview unavailable</h2>
+        <p>该效果可能需要 WebGL 或外部素材。可查看源码或重新载入。</p>
+        <button onClick={() => window.location.reload()}>重新载入 / Reload</button>
+      </div>
+    ) : (
+      this.props.children
+    );
+  }
+}
+
+function VideoCover({ item, featured = false }) {
+  const video = useRef(null);
+  const [visible, setVisible] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => {
+    if (!video.current) return;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '120px' }
+    );
+    observer.observe(video.current);
+    return () => observer.disconnect();
+  }, []);
+  const play = () => {
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) video.current?.play().catch(() => {});
+  };
+  return (
+    <div
+      className={`uie-cover ${featured ? 'featured' : ''}`}
+      onMouseEnter={play}
+      onMouseLeave={() => {
+        video.current?.pause();
+        setPlaying(false);
+      }}
+      onFocus={play}
+    >
+      <span className="uie-cover-fallback">{item.name}</span>
+      <img src={`/assets/personal-posters/${item.name}.webp`} alt="" loading="lazy" className="uie-poster" />
+      {!failed && (
+        <video
+          ref={video}
+          src={visible ? item.videoUrl : undefined}
+          style={{ opacity: playing ? 1 : 0 }}
+          onPlaying={() => setPlaying(true)}
+          muted
+          loop
+          playsInline
+          preload="none"
+          onError={() => setFailed(true)}
+          aria-hidden="true"
+        />
+      )}
+      <span className="uie-cover-arrow">
+        <ArrowRight size={18} />
+      </span>
+    </div>
+  );
+}
+
+function Shell() {
+  const { locale, setLocale, t } = useLocale();
+  const [params, setParams] = useSearchParams();
+  const { pathname } = useLocation();
+  const [menu, setMenu] = useState(false);
+  const [saved, setSaved] = useState(readSaved);
+  useEffect(() => {
+    setMenu(false);
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  const toggleSaved = id =>
+    setSaved(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      try {
+        localStorage.setItem('uie-saved', JSON.stringify(next));
+      } catch {
+        /* unavailable storage */
+      }
+      return next;
+    });
+  const category = params.get('category') || 'all';
+  const nav = (value, favorites = false) =>
+    `/?${new URLSearchParams({ ...(value !== 'all' ? { category: value } : {}), ...(favorites ? { saved: '1' } : {}) })}`;
+  const isHome = pathname === '/';
+  return (
+    <div className="uie-app">
+      <a className="uie-skip" href="#main">
+        {t('跳到内容', 'Skip to content')}
+      </a>
+      <header className="uie-header">
+        <button
+          className="uie-icon uie-mobile-menu"
+          aria-label={t('打开分类', 'Open categories')}
+          aria-expanded={menu}
+          onClick={() => setMenu(!menu)}
+        >
+          {menu ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        <Link className="uie-brand" to="/">
+          <span className="uie-mark">
+            <Layers size={21} />
+          </span>
+          <strong>
+            UI / Bits<span>{t('我的动效收藏库', 'Personal collection')}</span>
+          </strong>
+        </Link>
+        <div className="uie-header-right">
+          <span className="uie-personal-label">PERSONAL EDITION</span>
+          <button
+            className="uie-language"
+            onClick={() => {
+              const next = locale === 'zh' ? 'en' : 'zh';
+              setLocale(next);
+              if (params.has('lang')) {
+                const p = new URLSearchParams(params);
+                p.set('lang', next);
+                setParams(p, { replace: true });
+              }
+            }}
+            aria-label={t('切换英文', 'Switch to Chinese')}
+          >
+            {locale === 'zh' ? 'EN' : '中文'}
+          </button>
+          <a className="uie-icon" href={SOURCE_URL} target="_blank" rel="noreferrer" aria-label="GitHub">
+            <Github size={20} />
+          </a>
+        </div>
+      </header>
+      {menu && (
+        <button
+          className="uie-backdrop"
+          aria-label={t('关闭分类', 'Close categories')}
+          onClick={() => setMenu(false)}
+        />
+      )}
+      <aside className={`uie-sidebar ${menu ? 'is-open' : ''}`}>
+        <p className="uie-nav-label">{t('工作空间', 'WORKSPACE')}</p>
+        <Link
+          onClick={() => setMenu(false)}
+          className={isHome && category === 'all' && !params.has('saved') ? 'active' : ''}
+          to="/"
+        >
+          <Grid2X2 size={17} />
+          {t('全部组件', 'All components')}
+          <span>{catalog.length}</span>
+        </Link>
+        <Link
+          onClick={() => setMenu(false)}
+          className={isHome && params.has('saved') ? 'active' : ''}
+          to={nav('all', true)}
+        >
+          <Heart size={17} />
+          {t('我的收藏', 'Saved')}
+          <span>{saved.length}</span>
+        </Link>
+        <p className="uie-nav-label">{t('按类别探索', 'EXPLORE')}</p>
+        {Object.entries(categoryLabels).map(([key, labels], index) => (
+          <Link
+            key={key}
+            to={nav(key)}
+            onClick={() => setMenu(false)}
+            className={isHome && category === key ? 'active' : ''}
+          >
+            <span className="uie-category-dot" data-tone={index} />
+            {labels[locale === 'zh' ? 0 : 1]}
+            <span>{catalog.filter(x => x.category === key).length}</span>
+          </Link>
+        ))}
+        <div className="uie-side-note">
+          <span className="uie-note-icon">✳</span>
+          <p>{t('看见效果，也带走实现。', 'Explore the effect. Keep the code.')}</p>
+          <small>{t('灵感 · 体验 · 复用', 'DISCOVER · PLAY · BUILD')}</small>
+        </div>
+        <div className="uie-attribution">
+          Built on{' '}
+          <a href="https://github.com/DavidHDev/react-bits" target="_blank" rel="noreferrer">
+            React Bits ↗
+          </a>
+          <br />
+          <a href="/LICENSE.md" target="_blank" rel="noreferrer">
+            {t('上游许可与署名', 'License & attribution')}
+          </a>
+        </div>
+      </aside>
+      <main id="main" className="uie-main">
+        <Routes>
+          <Route path="/" element={<Library saved={saved} toggleSaved={toggleSaved} />} />
+          <Route path="/:category/:subcategory" element={<Detail saved={saved} toggleSaved={toggleSaved} />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function Library({ saved, toggleSaved }) {
+  const { locale, t } = useLocale();
+  const [params, setParams] = useSearchParams();
+  const [limit, setLimit] = useState(24);
+  const query = params.get('q') || '';
+  const category = params.get('category') || 'all';
+  const savedOnly = params.get('saved') === '1';
+  const promptOnly = params.get('prompt') === '1';
+  const update = (key, value) => {
+    const p = new URLSearchParams(params);
+    if (value) p.set(key, value);
+    else p.delete(key);
+    setParams(p, { replace: true });
+  };
+  useEffect(() => setLimit(24), [query, category, savedOnly, promptOnly]);
+  const items = filterCatalog(catalog, { query, category, savedOnly, saved, promptOnly, promptNames });
+  const hero = !query && category === 'all' && !savedOnly && !promptOnly;
+  useEffect(() => {
+    document.title = t('UI / Bits · 我的动效收藏库', 'UI / Bits · Personal collection');
+  }, [locale, t]);
+  return (
+    <>
+      {hero && (
+        <section className="uie-hero">
+          <div>
+            <p className="uie-eyebrow">
+              <span /> {t('属于你的界面灵感档案', 'YOUR INTERFACE INSPIRATION ARCHIVE')}
+            </p>
+            <h1>
+              {t('好界面，', 'Good interfaces.')}
+              <br />
+              <em>{t('从一个好动效开始。', 'A little motion goes a long way.')}</em>
+            </h1>
+            <p className="uie-hero-description">
+              {t('收集值得复用的细节。预览效果、调整参数，', 'Collect the details worth reusing. Preview, customize,')}
+              <br className="uie-desktop" />
+              {t('把下一次创作的灵感，变成可以带走的代码。', 'and take the code into your next creation.')}
+            </p>
+            <a href="#catalog" className="uie-explore">
+              {t('探索组件', 'Explore collection')}
+              <ArrowDown size={16} />
+            </a>
+          </div>
+          <Link className="uie-feature" to="/components/depth-carousel">
+            <VideoCover item={catalog.find(x => x.name === 'DepthCarousel')} featured />
+            <div>
+              <span>01 / {t('精选交互', 'IN FOCUS')}</span>
+              <strong>
+                {t('纵深轮播', 'Depth Carousel')} <ArrowRight size={18} />
+              </strong>
+            </div>
+          </Link>
+        </section>
+      )}
+      <section id="catalog" className="uie-library">
+        <div className="uie-section-heading">
+          <div>
+            <span className="uie-eyebrow">THE COLLECTION</span>
+            <h2>
+              {savedOnly
+                ? t('我的收藏', 'Saved collection')
+                : categoryLabels[category]?.[locale === 'zh' ? 0 : 1] || t('探索组件', 'Explore components')}{' '}
+              <span>{items.length}</span>
+            </h2>
+          </div>
+          <a href="/personal-registry/index.json" target="_blank" rel="noreferrer" className="uie-registry-link">
+            <Code2 size={15} />
+            {t('AI 目录', 'AI registry')} ↗
+          </a>
+        </div>
+        <div className="uie-toolbar">
+          <label className="uie-search">
+            <Search size={18} />
+            <input
+              aria-label={t('搜索组件', 'Search components')}
+              value={query}
+              onChange={e => update('q', e.target.value)}
+              placeholder={t('搜索动效、组件名称或关键词…', 'Search effects, components or keywords…')}
+            />
+            {query && (
+              <button aria-label={t('清空搜索', 'Clear search')} onClick={() => update('q', '')}>
+                <X size={16} />
+              </button>
+            )}
+          </label>
+          <label className="uie-select">
+            <span className="uie-sr-only">{t('类别筛选', 'Category filter')}</span>
+            <select value={category} onChange={e => update('category', e.target.value === 'all' ? '' : e.target.value)}>
+              <option value="all">{t('全部类别', 'All categories')}</option>
+              {Object.entries(categoryLabels).map(([key, labels]) => (
+                <option key={key} value={key}>
+                  {labels[locale === 'zh' ? 0 : 1]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            aria-pressed={promptOnly}
+            className={`uie-filter ${promptOnly ? 'selected' : ''}`}
+            onClick={() => update('prompt', promptOnly ? '' : '1')}
+          >
+            <Sparkles size={15} />
+            {t('有复现描述', 'With recreation spec')}
+          </button>
+        </div>
+        <div className="uie-grid">
+          {items.slice(0, limit).map(item => (
+            <article className="uie-card" key={item.id}>
+              <Link
+                className="uie-card-visual"
+                to={item.path}
+                aria-label={`${t('体验', 'Explore')} ${locale === 'zh' ? item.titleZh : item.name}`}
+              >
+                <VideoCover item={item} />
+              </Link>
+              <div className="uie-card-info">
+                <div>
+                  <span className="uie-card-category">{categoryLabels[item.category]?.[locale === 'zh' ? 0 : 1]}</span>
+                  <Link to={item.path}>
+                    <h3>{locale === 'zh' ? item.titleZh : item.name}</h3>
+                  </Link>
+                  <p>{locale === 'zh' ? item.name : item.titleZh}</p>
+                </div>
+                <button
+                  className={`uie-save ${saved.includes(item.id) ? 'saved' : ''}`}
+                  onClick={() => toggleSaved(item.id)}
+                  aria-pressed={saved.includes(item.id)}
+                  aria-label={`${saved.includes(item.id) ? t('取消收藏', 'Unsave') : t('收藏', 'Save')} ${locale === 'zh' ? item.titleZh : item.name}`}
+                >
+                  <Heart size={17} fill={saved.includes(item.id) ? 'currentColor' : 'none'} />
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+        {!items.length && (
+          <div className="uie-empty">
+            <Search size={32} />
+            <h3>{t('这里还没有匹配的组件', 'No matching components')}</h3>
+            <p>{t('试试其他关键词，或清除筛选条件。', 'Try another keyword, or clear the filters.')}</p>
+            <button onClick={() => setParams({})}>{t('查看全部组件', 'Show all components')}</button>
+          </div>
+        )}
+        {items.length > limit && (
+          <button className="uie-load" onClick={() => setLimit(x => x + 24)}>
+            {t('加载更多', 'Load more')}
+            <ArrowDown size={16} />
+            <span>
+              {Math.min(limit, items.length)} / {items.length}
+            </span>
+          </button>
+        )}
+        <footer className="uie-footer">
+          <span>{t('把喜欢的交互，留给下一次创作。', 'Save an interaction for your next creation.')}</span>
+          <span>UI / Bits · React Bits personal edition</span>
+        </footer>
+      </section>
+    </>
+  );
+}
+
+function CopyButton({ text, label }) {
+  const { t } = useLocale();
+  const [status, setStatus] = useState('');
+  return (
+    <div>
+      <button className="uie-action" onClick={async () => setStatus((await copyText(text)) ? 'ok' : 'error')}>
+        {status === 'ok' ? <Check size={16} /> : <Copy size={16} />}
+        {status === 'ok' ? t('已复制', 'Copied') : label}
+      </button>
+      {status === 'error' && (
+        <p role="status">
+          {t('复制受浏览器限制，请选择下方文本手动复制。', 'Clipboard unavailable. Select and copy the text below.')}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function SourcePanel({ item }) {
+  const { t } = useLocale();
+  const [variant, setVariant] = useState(item.variants.includes('TS-CSS') ? 'TS-CSS' : item.variants[0]);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(false);
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const ac = new AbortController();
+    setData(null);
+    setError(false);
+    setIndex(0);
+    fetch(`/r/${item.name}-${variant}.json`, { signal: ac.signal })
+      .then(r => {
+        if (!r.ok) throw new Error('source');
+        return r.json();
+      })
+      .then(setData)
+      .catch(e => {
+        if (e.name !== 'AbortError') setError(true);
+      });
+    return () => ac.abort();
+  }, [item.name, variant]);
+  const file = data?.files?.[index];
+  return (
+    <section className="uie-source">
+      <div className="uie-source-toolbar">
+        <label>
+          {t('代码版本', 'Variant')}{' '}
+          <select aria-label={t('代码版本', 'Variant')} value={variant} onChange={e => setVariant(e.target.value)}>
+            {item.variants.map(v => (
+              <option key={v}>{v}</option>
+            ))}
+          </select>
+        </label>
+        <a className="uie-action" download={`${item.name}-${variant}.json`} href={`/r/${item.name}-${variant}.json`}>
+          <Code2 size={16} />
+          {t('下载完整源码包', 'Download source bundle')}
+        </a>
+      </div>
+      {error ? (
+        <p role="alert">
+          {t('源码加载失败，请重新选择版本或重试。', 'Source could not load. Choose the variant again or retry.')}
+        </p>
+      ) : !data ? (
+        <p role="status">{t('读取源码…', 'Loading source…')}</p>
+      ) : (
+        <>
+          <p className="uie-source-deps">
+            {t('依赖', 'Dependencies')}：{data.dependencies?.join(', ') || 'React'} ·{' '}
+            <a href="/LICENSE.md">{t('上游许可', 'Upstream license')}</a>
+          </p>
+          <div className="uie-file-tabs">
+            {data.files?.map((f, i) => (
+              <button key={f.path} className={i === index ? 'selected' : ''} onClick={() => setIndex(i)}>
+                {f.path.split('/').pop()}
+              </button>
+            ))}
+          </div>
+          {file && (
+            <>
+              <CopyButton key={file.path + variant} text={file.content} label={t('复制当前文件', 'Copy file')} />
+              <pre tabIndex={0}>
+                <code>{file.content}</code>
+              </pre>
+            </>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function Detail({ saved, toggleSaved }) {
+  const { pathname } = useLocation();
+  const item = catalog.find(x => x.path === pathname);
+  return item ? <DetailContent key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} /> : <NotFound />;
+}
+function DetailContent({ item, saved, toggleSaved }) {
+  const { locale, t } = useLocale();
+  const [tab, setTab] = useState('preview');
+  const [round, setRound] = useState(0);
+  const [phase, setPhase] = useState('playing');
+  const prompt = prompts[item.name]?.[locale];
+  useEffect(() => {
+    document.title = `${locale === 'zh' ? item.titleZh : item.name} · UI / Bits`;
+  }, [item, locale]);
+  return (
+    <article className="uie-detail">
+      <Link className="uie-back" to="/">
+        <ArrowLeft size={15} />
+        {t('返回组件库', 'Back to collection')}
+      </Link>
+      <div className="uie-detail-heading">
+        <div>
+          <span className="uie-eyebrow">{categoryLabels[item.category]?.[locale === 'zh' ? 0 : 1]} / REACT BITS</span>
+          <h1>{locale === 'zh' ? item.titleZh : item.name}</h1>
+          <p className="uie-detail-subtitle">
+            {locale === 'zh' ? item.name : item.titleZh} <span>· {t('可交互演示', 'Interactive demo')}</span>
+          </p>
+        </div>
+        <button
+          className={`uie-action ${saved.includes(item.id) ? 'selected' : ''}`}
+          onClick={() => toggleSaved(item.id)}
+          aria-pressed={saved.includes(item.id)}
+        >
+          <Heart size={16} />
+          {saved.includes(item.id) ? t('已收藏', 'Saved') : t('收藏组件', 'Save component')}
+        </button>
+      </div>
+      <p className="uie-detail-description">
+        {locale === 'zh' && descriptionsZh[item.name] ? descriptionsZh[item.name] : item.description}
+      </p>
+      {locale === 'zh' && !descriptionsZh[item.name] && (
+        <p className="uie-original-note">以上为上游原始说明；组件名称、导航与操作已中文化。</p>
+      )}
+      <div className="uie-detail-tabs" role="tablist" aria-label={t('组件详情', 'Component details')}>
+        {[
+          ['preview', t('效果预览', 'Preview'), Play],
+          ['source', t('组件源码', 'Source'), Code2],
+          ['prompt', t('复现提示词', 'Recreation prompt'), Sparkles]
+        ].map(([key, label, Icon]) => (
+          <button
+            role="tab"
+            aria-selected={tab === key}
+            aria-controls={`panel-${key}`}
+            key={key}
+            id={`tab-${key}`}
+            onClick={() => setTab(key)}
+          >
+            <Icon size={16} />
+            {label}
+          </button>
+        ))}
+      </div>
+      <section className="uie-detail-panel" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+        {tab === 'preview' && (
+          <>
+            <div className="uie-preview-top">
+              <span>
+                <i />{' '}
+                {phase === 'completed'
+                  ? t('体验已结束', 'Session finished')
+                  : t('可直接点击、拖动或调整参数', 'Click, drag or adjust the parameters')}
+              </span>
+              {phase === 'playing' && (
+                <button onClick={() => setPhase('completed')}>{t('结束本次体验', 'Finish session')}</button>
+              )}
+            </div>
+            {phase === 'playing' ? (
+              <iframe
+                key={`${item.id}-${round}-${locale}`}
+                className="uie-demo-frame"
+                title={`${item.name} ${t('交互演示', 'interactive demo')}`}
+                src={`/preview${item.path}?lang=${locale}`}
+                sandbox="allow-scripts allow-same-origin"
+                allow="fullscreen"
+              />
+            ) : (
+              <div className="uie-completed">
+                <RotateCcw size={32} />
+                <h2>{t('再感受一次？', 'One more time?')}</h2>
+                <p>{t('重新播放会重置本次演示的所有交互。', 'Replay starts a fresh interaction session.')}</p>
+                <div>
+                  <button
+                    className="uie-action primary"
+                    onClick={() => {
+                      setRound(x => x + 1);
+                      setPhase('playing');
+                    }}
+                  >
+                    <Play size={16} />
+                    {t('重新体验', 'Replay')}
+                  </button>
+                  <button className="uie-action" onClick={() => setTab('prompt')}>
+                    <Sparkles size={16} />
+                    {t('查看复现提示词', 'Recreation prompt')}
+                  </button>
+                  <button className="uie-action" onClick={() => setTab('source')}>
+                    <Code2 size={16} />
+                    {t('查看源码', 'View source')}
+                  </button>
+                </div>
+              </div>
+            )}
+            <p className="uie-preview-note">
+              {t(
+                '循环与手势演示没有固定终点，可点击“结束本次体验”后重新播放。',
+                'Looping and gesture demos have no fixed end. Finish the session to replay.'
+              )}
+            </p>
+          </>
+        )}
+        {tab === 'source' && <SourcePanel item={item} />}
+        {tab === 'prompt' && (
+          <div className="uie-prompt">
+            <div className="uie-prompt-heading">
+              <h2>{t('独立复现描述', 'Standalone recreation spec')}</h2>
+              <span className="uie-status">{t('尚未验证', 'Not verified')}</span>
+            </div>
+            <p>
+              {t(
+                '仅提供视觉与行为描述，不附带上游源码。当前展示的效果来自 React Bits，不能视为这份提示词的生成结果。',
+                'This specification describes visuals and behavior without upstream source. The displayed demo is from React Bits, not evidence of a result generated from this prompt.'
+              )}
+            </p>
+            <dl className="uie-provenance">
+              {[
+                ['Agent', '—'],
+                [t('模型', 'Model'), '—'],
+                [t('思考等级', 'Reasoning'), '—'],
+                [t('一次生成', 'First-pass'), t('未执行', 'Not run')]
+              ].map(([key, value]) => (
+                <div key={key}>
+                  <dt>{key}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {prompt ? (
+              <>
+                <CopyButton key={locale} text={prompt} label={t('复制复现描述', 'Copy recreation spec')} />
+                <pre tabIndex={0}>{prompt}</pre>
+              </>
+            ) : (
+              <div className="uie-empty">
+                <Sparkles size={28} />
+                <h3>{t('这份复现描述还在等待整理', 'A recreation spec has not been authored yet')}</h3>
+                <p>
+                  {t(
+                    '你仍然可以从“组件源码”获取完整实现。',
+                    'You can still get the complete implementation in Source.'
+                  )}
+                </p>
+                <button onClick={() => setTab('source')}>{t('查看组件源码', 'View source')}</button>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+      <div className="uie-detail-footer">
+        <span>
+          {t('来源', 'Source')}：
+          <a href={item.docsUrl} target="_blank" rel="noreferrer">
+            React Bits / {item.name} ↗
+          </a>
+        </span>
+        <a href={`/personal-registry/${item.name}.json`} target="_blank" rel="noreferrer">
+          {t('机器可读条目', 'Machine-readable entry')} ↗
+        </a>
+      </div>
+    </article>
+  );
+}
+function NotFound() {
+  const { t } = useLocale();
+  return (
+    <div className="uie-empty">
+      <h1>404</h1>
+      <p>{t('没有找到这个组件。', 'This component could not be found.')}</p>
+      <Link to="/">{t('返回组件库', 'Back to collection')}</Link>
+    </div>
+  );
+}
+
+export default function PersonalApp() {
+  return (
+    <LocaleProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/preview/:category/:subcategory"
+            element={
+              <DemoBoundary>
+                <Suspense fallback={<p role="status">Loading demo…</p>}>
+                  <DemoFrame />
+                </Suspense>
+              </DemoBoundary>
+            }
+          />
+          <Route path="*" element={<Shell />} />
+        </Routes>
+      </BrowserRouter>
+    </LocaleProvider>
+  );
+}

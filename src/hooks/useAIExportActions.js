@@ -1,3 +1,4 @@
+import { useLocale } from '../personal/Locale';
 import { useCallback, useMemo, useState } from 'react';
 import { Sparkles, FileCode2, Terminal, FileText } from 'lucide-react';
 import { SiOpenai, SiClaude, SiVercel } from 'react-icons/si';
@@ -17,6 +18,7 @@ export function useAIExportActions({
   componentCss,
   dependencies
 }) {
+  const { t } = useLocale();
   const [done, setDone] = useState(null);
   const { languagePreset, stylePreset } = useOptions();
   const { cliTool, packageManager } = useInstallation();
@@ -50,30 +52,30 @@ export function useAIExportActions({
     return [
       {
         key: 'prompt',
-        label: 'Copy prompt',
+        label: t('复制集成提示（含源码）', 'Copy integration prompt (with source)'),
         icon: Sparkles,
         run: () => run('prompt', fullPrompt, 'Prompt copied — paste into any AI assistant')
       },
       {
         key: 'usage',
-        label: 'Copy configured code',
+        label: t('复制使用示例', 'Copy configured code'),
         icon: FileText,
         run: () => run('usage', configuredUsage, 'Configured usage copied')
       },
       {
         key: 'source',
-        label: 'Copy component source',
+        label: t('复制组件源码', 'Copy component source'),
         icon: FileCode2,
         run: () => run('source', sourceWithCss, 'Component source copied')
       },
       {
         key: 'install',
-        label: 'Copy install command',
+        label: t('复制安装命令', 'Copy install command'),
         icon: Terminal,
         run: () => run('install', installCommand, 'Install command copied')
       }
     ];
-  }, [componentName, componentCss, componentSource, fullPrompt, configuredUsage, installCommand, run]);
+  }, [componentName, componentCss, componentSource, fullPrompt, configuredUsage, installCommand, run, t]);
 
   const openItems = useMemo(() => {
     const compactPrompt = buildCompactPrompt({

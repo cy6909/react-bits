@@ -1,14 +1,16 @@
 import { useContext } from 'react';
 import { Palette, RotateCcw } from 'lucide-react';
 import CustomizeActionsContext from './CustomizeContext';
+import { useLocale } from '../../../personal/Locale';
 
 const Customize = ({ children }) => {
   const actions = useContext(CustomizeActionsContext);
+  const { t } = useLocale();
 
   return (
     <div className="customize-frame">
       <div className="customize-heading">
-        <h2>Customize</h2>
+        <h2>{t('调整参数', 'Customize')}</h2>
         <div className="customize-heading-actions">
           {actions?.reset && (
             <button
@@ -20,7 +22,7 @@ const Customize = ({ children }) => {
               tabIndex={actions.canReset ? 0 : -1}
             >
               <RotateCcw size={14} aria-hidden="true" />
-              <span>Reset</span>
+              <span>{t('恢复默认', 'Reset')}</span>
             </button>
           )}
           {actions?.openStudio && (

@@ -35,3 +35,7 @@ AGENTS.md
 *.njsproj
 *.sln
 *.sw?
+
+# Personal fork evidence
+test-results/
+!AGENTS.md

@@ -1,3 +1,4 @@
+import { useLocale } from '../../personal/Locale';
 import { Menu, Portal, Box } from '@chakra-ui/react';
 import { Check, ChevronDown } from 'lucide-react';
 import { colors } from '../../constants/colors';
@@ -36,6 +37,7 @@ export const AIMenuSeparator = () => (
 );
 
 const CopyForAIMenu = ({ triggerProps, copyItems, openItems, done }) => {
+  const { t } = useLocale();
   return (
     <Menu.Root positioning={{ placement: 'bottom-end', gutter: 8 }}>
       <Menu.Trigger asChild>
@@ -51,7 +53,7 @@ const CopyForAIMenu = ({ triggerProps, copyItems, openItems, done }) => {
           pr={2.5}
         >
           {done && <Check size={14} color={colors.accent} />}
-          {done ? 'Copied!' : 'Copy for AI'}
+          {done ? t('已复制', 'Copied!') : t('AI 集成', 'Copy for AI')}
           <ChevronDown size={14} />
         </Box>
       </Menu.Trigger>

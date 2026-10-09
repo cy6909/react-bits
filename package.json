@@ -22,7 +22,8 @@
     "predev": "npm run pro:summary",
     "prebuild": "npm run pro:summary",
     "pro:sync": "node scripts/syncProCatalog.js",
-    "pro:sync:check": "node scripts/syncProCatalog.js --check"
+    "pro:sync:check": "node scripts/syncProCatalog.js --check",
+    "build:personal": "node scripts/generatePersonalCatalog.mjs && vite build"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.20.0",

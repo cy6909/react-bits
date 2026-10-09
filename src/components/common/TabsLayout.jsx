@@ -1,7 +1,5 @@
+import { useLocale } from '../../personal/Locale';
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import TabsFooter from './TabsFooter';
-import CategoryProFooter from './Pro/CategoryProFooter';
-import Customize from './Preview/Customize';
 
 import { Tabs, Icon, Flex, Tooltip, Box, Menu, Portal } from '@chakra-ui/react';
 import { FiCode, FiEye } from 'react-icons/fi';
@@ -21,7 +19,6 @@ import { buildStudioUrl } from './Preview/studio-url';
 import CopyForAIMenu, { AIMenuItem, AIMenuSeparator } from './CopyForAIMenu';
 import FluidMenuContent from './FluidMenuContent';
 import { useAIExportActions } from '../../hooks/useAIExportActions';
-import ComponentPager from './ComponentPager';
 import CustomizeActionsContext from './Preview/CustomizeContext';
 import PreviewResizer, { PreviewStage } from './Preview/PreviewResizer';
 import { usePreviewFrame } from '../../hooks/usePreviewFrame';
@@ -66,33 +63,6 @@ function findChildProps(children, targetType) {
     }
   });
   return result;
-}
-
-function insertCategoryPro(children, category) {
-  const target = findChildProps(children, Customize) ? Customize : PropTable;
-  let inserted = false;
-  const visit = node => {
-    if (inserted) return node;
-    if (Array.isArray(node)) return node.map(visit);
-    if (!React.isValidElement(node)) return node;
-    if (node.type === target) {
-      inserted = true;
-      const strip = <CategoryProFooter key="related-pro" category={category} />;
-      return (
-        <React.Fragment key={node.key ?? 'related-pro-slot'}>
-          {target === Customize ? node : strip}
-          {target === Customize ? strip : node}
-        </React.Fragment>
-      );
-    }
-    if (node.props.children == null) return node;
-    const next = visit(node.props.children);
-    if (!inserted) return node;
-    return Array.isArray(next)
-      ? React.cloneElement(node, undefined, ...next)
-      : React.cloneElement(node, undefined, next);
-  };
-  return visit(children);
 }
 
 const TOOLTIP_CONTENT_PROPS = {
@@ -250,6 +220,7 @@ The full library index, including everything reactbits.dev offers, is at https:/
 }
 
 const TabsLayout = ({ children, className }) => {
+  const { t } = useLocale();
   const { category, subcategory } = useParams();
   const {
     hasChanges,
@@ -406,11 +377,11 @@ const TabsLayout = ({ children, className }) => {
           {/* Primary tabs */}
           <Flex gap={2} wrap="nowrap" flex={{ base: '1 1 0', md: '0 0 auto' }} minW="0">
             <Tabs.Trigger value="preview" {...TAB_STYLE_PROPS} flex={{ base: '1 1 0', md: '0 0 auto' }}>
-              <Icon as={FiEye} /> Preview
+              <Icon as={FiEye} /> {t('预览与参数', 'Preview')}
             </Tabs.Trigger>
 
             <Tabs.Trigger value="code" {...TAB_STYLE_PROPS} flex={{ base: '1 1 0', md: '0 0 auto' }}>
-              <Icon as={FiCode} /> Code
+              <Icon as={FiCode} /> {t('代码与用法', 'Code')}
             </Tabs.Trigger>
           </Flex>
 
@@ -690,7 +661,7 @@ const TabsLayout = ({ children, className }) => {
             canReset: hasChanges
           }}
         >
-          {insertCategoryPro(contentMap.PreviewTab, category)}
+          {contentMap.PreviewTab}
         </CustomizeActionsContext.Provider>
         {canResize && (
           <PreviewResizer
@@ -704,10 +675,6 @@ const TabsLayout = ({ children, className }) => {
       <Tabs.Content pt={0} value="code">
         {contentMap.CodeTab}
       </Tabs.Content>
-
-      {category !== 'get-started' && <ComponentPager category={category} subcategory={subcategory} />}
-
-      <TabsFooter />
     </Tabs.Root>
   );
 };
