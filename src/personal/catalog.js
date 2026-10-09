@@ -1,11 +1,18 @@
 import { componentMetadata } from '../constants/Information.js';
+import motionPromptsCatalog from './motion-prompts/catalog-data.js';
 
 export const categoryLabels = {
   Components: ['交互组件', 'Components'],
   TextAnimations: ['文字动效', 'Text animations'],
   Animations: ['交互动效', 'Animations'],
   Backgrounds: ['动态背景', 'Backgrounds'],
-  Micro: ['微交互', 'Micro interactions']
+  Micro: ['微交互', 'Micro interactions'],
+  ScrollEffects: ['滚动叙事', 'Scroll stories'],
+  Galleries: ['轮播与画廊', 'Sliders & galleries'],
+  Navigation: ['导航菜单', 'Navigation'],
+  PageTransitions: ['入场与转场', 'Reveals & transitions'],
+  ThreeD: ['3D 与 WebGL', '3D & WebGL'],
+  Footers: ['创意页脚', 'Creative footers']
 };
 
 // Keep translations separate from upstream identifiers and implementation files.
@@ -245,9 +252,11 @@ const featured = [
   'TiltedCard',
   'SquishSwitch'
 ];
-export const catalog = Object.values(componentMetadata)
+export const reactBitsCatalog = Object.values(componentMetadata)
   .map(item => ({
     ...item,
+    source: 'react-bits',
+    posterUrl: `/assets/personal-posters/${item.name}.webp`,
     id: `${item.category}/${item.name}`,
     titleZh: titlesZh[item.name] || item.name,
     path: new URL(item.docsUrl).pathname,
@@ -258,7 +267,14 @@ export const catalog = Object.values(componentMetadata)
     return rank(a) - rank(b) || a.name.localeCompare(b.name);
   });
 
-export function filterCatalog(items, { query = '', category = 'all', savedOnly = false, saved = [] } = {}) {
+export { motionPromptsCatalog };
+export const catalog = [...reactBitsCatalog, ...motionPromptsCatalog];
+export const sourceLabels = { 'react-bits': 'React Bits', 'motion-prompts': 'Motion Prompts' };
+
+export function filterCatalog(
+  items,
+  { query = '', category = 'all', source = 'all', access = 'all', savedOnly = false, saved = [] } = {}
+) {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   return items.filter(item => {
     const haystack = [
@@ -266,6 +282,7 @@ export function filterCatalog(items, { query = '', category = 'all', savedOnly =
       item.titleZh,
       item.description,
       item.category,
+      sourceLabels[item.source],
       ...(categoryLabels[item.category] || []),
       ...item.tags
     ]
@@ -273,6 +290,11 @@ export function filterCatalog(items, { query = '', category = 'all', savedOnly =
       .toLocaleLowerCase();
     return (
       (category === 'all' || category === item.category) &&
+      (source === 'all' || source === item.source) &&
+      (access === 'all' ||
+        (access === 'full'
+          ? item.source === 'react-bits' || item.promptAccess === 'full'
+          : item.promptAccess === access)) &&
       (!savedOnly || saved.includes(item.id)) &&
       terms.every(term => haystack.includes(term))
     );

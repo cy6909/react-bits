@@ -4,9 +4,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
-  Check,
   Code2,
-  Copy,
   Github,
   Grid2X2,
   Heart,
@@ -18,9 +16,10 @@ import {
   Sparkles,
   X
 } from 'lucide-react';
-import { catalog, categoryLabels, descriptionsZh, filterCatalog } from './catalog';
+import { catalog, categoryLabels, descriptionsZh, filterCatalog, sourceLabels } from './catalog';
 import { LocaleProvider, useLocale } from './Locale';
-import { copyText } from '../utils/aiExport';
+import CopyButton from './CopyButton';
+import MotionPromptDetail from './MotionPromptDetail';
 import './personal.css';
 
 const DemoFrame = lazy(() => import('./DemoFrame'));
@@ -56,6 +55,7 @@ function VideoCover({ item, featured = false }) {
   const [visible, setVisible] = useState(false);
   const [failed, setFailed] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [posterFailed, setPosterFailed] = useState(false);
   useEffect(() => {
     if (!video.current) return;
     const observer = new IntersectionObserver(
@@ -84,7 +84,9 @@ function VideoCover({ item, featured = false }) {
       onFocus={play}
     >
       <span className="uie-cover-fallback">{item.name}</span>
-      <img src={`/assets/personal-posters/${item.name}.webp`} alt="" loading="lazy" className="uie-poster" />
+      {!posterFailed && (
+        <img src={item.posterUrl} alt="" loading="lazy" className="uie-poster" onError={() => setPosterFailed(true)} />
+      )}
       {!failed && (
         <video
           ref={video}
@@ -127,8 +129,9 @@ function Shell() {
       return next;
     });
   const category = params.get('category') || 'all';
+  const source = params.get('source') || 'all';
   const nav = (value, favorites = false) =>
-    `/?${new URLSearchParams({ ...(value !== 'all' ? { category: value } : {}), ...(favorites ? { saved: '1' } : {}) })}`;
+    `/?${new URLSearchParams({ ...(value !== 'all' ? { category: value } : {}), ...(source !== 'all' ? { source } : {}), ...(favorites ? { saved: '1' } : {}) })}`;
   const isHome = pathname === '/';
   return (
     <div className="uie-app">
@@ -211,7 +214,7 @@ function Shell() {
           >
             <span className="uie-category-dot" data-tone={index} />
             {labels[locale === 'zh' ? 0 : 1]}
-            <span>{catalog.filter(x => x.category === key).length}</span>
+            <span>{catalog.filter(x => x.category === key && (source === 'all' || x.source === source)).length}</span>
           </Link>
         ))}
         <div className="uie-side-note">
@@ -227,6 +230,14 @@ function Shell() {
           <br />
           <a href="/LICENSE.md" target="_blank" rel="noreferrer">
             {t('上游许可与署名', 'License & attribution')}
+          </a>
+          <br />
+          <a href="https://motionprompts.dev" target="_blank" rel="noreferrer">
+            Motion Prompts ↗
+          </a>
+          <br />
+          <a href="/motion-prompts/LICENSE.txt" target="_blank" rel="noreferrer">
+            {t('非商业使用 · 来源许可', 'Noncommercial · License')}
           </a>
         </div>
       </aside>
@@ -247,6 +258,8 @@ function Library({ saved, toggleSaved }) {
   const [limit, setLimit] = useState(24);
   const query = params.get('q') || '';
   const category = params.get('category') || 'all';
+  const source = params.get('source') || 'all';
+  const access = params.get('access') || 'all';
   const savedOnly = params.get('saved') === '1';
   const update = (key, value) => {
     const p = new URLSearchParams(params);
@@ -254,9 +267,9 @@ function Library({ saved, toggleSaved }) {
     else p.delete(key);
     setParams(p, { replace: true });
   };
-  useEffect(() => setLimit(24), [query, category, savedOnly]);
-  const items = filterCatalog(catalog, { query, category, savedOnly, saved });
-  const hero = !query && category === 'all' && !savedOnly;
+  useEffect(() => setLimit(24), [query, category, source, access, savedOnly]);
+  const items = filterCatalog(catalog, { query, category, source, access, savedOnly, saved });
+  const hero = !query && category === 'all' && source === 'all' && access === 'all' && !savedOnly;
   useEffect(() => {
     document.title = t('UI / Bits · 我的动效收藏库', 'UI / Bits · Personal collection');
   }, [locale, t]);
@@ -310,6 +323,14 @@ function Library({ saved, toggleSaved }) {
             {t('AI 目录', 'AI registry')} ↗
           </a>
         </div>
+        <div className="uie-source-pills" role="group" aria-label={t('内容来源', 'Content source')}>
+          {[['all', t('全部来源', 'All sources')], ...Object.entries(sourceLabels)].map(([key, label]) => (
+            <button key={key} aria-pressed={source === key} onClick={() => update('source', key === 'all' ? '' : key)}>
+              {label}
+              <span>{key === 'all' ? catalog.length : catalog.filter(x => x.source === key).length}</span>
+            </button>
+          ))}
+        </div>
         <div className="uie-toolbar">
           <label className="uie-search">
             <Search size={18} />
@@ -336,7 +357,23 @@ function Library({ saved, toggleSaved }) {
               ))}
             </select>
           </label>
+          <label className="uie-select">
+            <span className="uie-sr-only">{t('提示词范围', 'Prompt access')}</span>
+            <select value={access} onChange={e => update('access', e.target.value === 'all' ? '' : e.target.value)}>
+              <option value="all">{t('全部提示词', 'All prompt access')}</option>
+              <option value="full">{t('完整公开', 'Full public')}</option>
+              <option value="preview">{t('仅官方预览', 'Official excerpt only')}</option>
+            </select>
+          </label>
         </div>
+        {source === 'motion-prompts' && (
+          <p className="uie-source-note">
+            {t(
+              '248 个组件与设计 · 30 份完整公开提示词 · 218 份官方预览。交互演示在原站打开。',
+              '248 components and designs · 30 full public prompts · 218 official excerpts. Interactive demos open on the source site.'
+            )}
+          </p>
+        )}
         <div className="uie-grid">
           {items.slice(0, limit).map(item => (
             <article className="uie-card" key={item.id}>
@@ -349,7 +386,10 @@ function Library({ saved, toggleSaved }) {
               </Link>
               <div className="uie-card-info">
                 <div>
-                  <span className="uie-card-category">{categoryLabels[item.category]?.[locale === 'zh' ? 0 : 1]}</span>
+                  <span className="uie-card-category">
+                    {categoryLabels[item.category]?.[locale === 'zh' ? 0 : 1]}
+                    <span className="uie-source-badge">{sourceLabels[item.source]}</span>
+                  </span>
                   <Link to={item.path}>
                     <h3>{locale === 'zh' ? item.titleZh : item.name}</h3>
                   </Link>
@@ -390,24 +430,6 @@ function Library({ saved, toggleSaved }) {
         </footer>
       </section>
     </>
-  );
-}
-
-function CopyButton({ text, label }) {
-  const { t } = useLocale();
-  const [status, setStatus] = useState('');
-  return (
-    <div>
-      <button className="uie-action" onClick={async () => setStatus((await copyText(text)) ? 'ok' : 'error')}>
-        {status === 'ok' ? <Check size={16} /> : <Copy size={16} />}
-        {status === 'ok' ? t('已复制', 'Copied') : label}
-      </button>
-      {status === 'error' && (
-        <p role="status">
-          {t('复制受浏览器限制，请选择下方文本手动复制。', 'Clipboard unavailable. Select and copy the text below.')}
-        </p>
-      )}
-    </div>
   );
 }
 
@@ -486,11 +508,18 @@ function SourcePanel({ item }) {
 function Detail({ saved, toggleSaved }) {
   const { pathname } = useLocation();
   const item = catalog.find(x => x.path === pathname);
-  return item ? <DetailContent key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} /> : <NotFound />;
+  if (!item) return <NotFound />;
+  return item.source === 'motion-prompts' ? (
+    <MotionPromptDetail key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} />
+  ) : (
+    <DetailContent key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} />
+  );
 }
 function DetailContent({ item, saved, toggleSaved }) {
   const { locale, t } = useLocale();
-  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get('view') === 'prompt' ? 'prompt' : 'preview');
+  const [tab, setTab] = useState(() =>
+    new URLSearchParams(window.location.search).get('view') === 'prompt' ? 'prompt' : 'preview'
+  );
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState('playing');
   const frameRef = useRef(null);

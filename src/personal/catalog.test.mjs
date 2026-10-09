@@ -1,15 +1,34 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { catalog, filterCatalog, titlesZh } from './catalog.js';
+import { catalog, reactBitsCatalog, motionPromptsCatalog, categoryLabels, filterCatalog, titlesZh } from './catalog.js';
 import { buildPrompt, buildPromptZh } from './upstreamPrompt.js';
 
 test('all imported entries have unique routes, stable IDs and Chinese names', () => {
   assert.equal(new Set(catalog.map(x => x.id)).size, catalog.length);
   assert.equal(new Set(catalog.map(x => x.path)).size, catalog.length);
-  for (const item of catalog) {
+  for (const item of reactBitsCatalog) {
     assert.ok(titlesZh[item.name], item.name);
     assert.ok(item.path.startsWith('/'));
   }
+});
+
+test('Motion Prompts public catalog merges without collisions or invented source availability', () => {
+  assert.equal(reactBitsCatalog.length, 215);
+  assert.equal(motionPromptsCatalog.length, 248);
+  assert.equal(catalog.length, 463);
+  assert.equal(motionPromptsCatalog.filter(x => x.promptAccess === 'full').length, 30);
+  assert.equal(motionPromptsCatalog.filter(x => x.promptAccess === 'preview').length, 218);
+  for (const item of motionPromptsCatalog) {
+    assert.ok(categoryLabels[item.category]);
+    assert.match(item.titleZh, /[\u3400-\u9fff]/);
+    assert.ok(item.path.startsWith('/motion-prompts/'));
+    assert.deepEqual(item.variants, []);
+    assert.equal(new URL(item.demoUrl).origin, 'https://motionprompts.dev');
+  }
+  assert.equal(filterCatalog(catalog, { source: 'motion-prompts', access: 'full' }).length, 30);
+  assert.equal(filterCatalog(catalog, { source: 'motion-prompts', category: 'ScrollEffects' }).length, 71);
+  assert.equal(filterCatalog(catalog, { source: 'react-bits', access: 'preview' }).length, 0);
+  assert.equal(filterCatalog(catalog, { source: 'motion-prompts', query: '轨道 轮播' })[0].slug, 'orbit-carousel-3d');
 });
 test('Chinese and English search compose with category and saved filters', () => {
   assert.equal(filterCatalog(catalog, { query: '纵深 轮播' })[0].name, 'DepthCarousel');

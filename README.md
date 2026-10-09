@@ -2,7 +2,7 @@
 
 A Chinese-first personal library built on React Bits. Original component implementations and the upstream license remain intact.
 
-- Browse 215 imported components with Chinese names, bilingual navigation, category/search filters and local favorites.
+- Browse 463 entries: 215 React Bits components and 248 Motion Prompts designs, with Chinese names, bilingual navigation, source/category/search filters and local favorites.
 - Preview upstream demos, finish/replay a session, inspect/download source variants, or copy the original upstream prompt in English or Chinese.
 - Prompts use the upstream Copy prompt template. English is unchanged; Chinese translates its instructions. Source code, dependencies and API property descriptions remain verbatim.
 - Source editing is local; installation, build, browser tests and Docker deployment run only on `10.89.2.12`.
@@ -11,7 +11,15 @@ A Chinese-first personal library built on React Bits. Original component impleme
 - Optional poster regeneration on machine 12 requires FFmpeg: `node scripts/generatePersonalPosters.mjs`.
 - Project knowledge: https://app.notion.com/p/3f490f837c9581998619fc1bad80b228
 
-Component descriptions and some upstream demo controls remain in English. Chinese titles and the personal shell cover all catalog entries; the original Copy prompt supports both Chinese and English. This is not an official React Bits translation.
+Component descriptions and some upstream demo controls remain in English. Chinese titles and the personal shell cover all catalog entries; the React Bits Copy prompt supports both Chinese and English. This is not an official React Bits translation.
+
+## Motion Prompts public collection
+
+Attribution: [motionprompts.dev · Vanguardia](https://motionprompts.dev). The official [motionprompts-mcp distribution](https://github.com/VanguardiaAI/motionprompts-mcp) is licensed separately under PolyForm Noncommercial 1.0.0 with attribution; its full license is preserved in `public/motion-prompts/LICENSE.txt`.
+
+This snapshot contains 30 complete public prompts and 218 official excerpts, preserved verbatim in English. No paid full prompts, component source or demo media are redistributed. Images and preview videos load from the original provider; live interactions open there in a new tab. These are catalog entries and public design references, not 248 locally implemented React components or verified prompt-only reproductions.
+
+On machine 12, regenerate with `node scripts/importMotionPrompts.mjs <official-repo-checkout> <public-api-catalog.json>`. Verify with `node scripts/checkMotionPrompts.mjs`; `public/motion-prompts/manifest.json` records the source commit and access counts. The shared AI index is `/personal-registry/index.json`.
 
 ## Upstream project
 

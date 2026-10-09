@@ -1,4 +1,150 @@
 /* Personal shell. Upstream demo styling remains scoped inside its frame. */
+.uie-source-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+}
+.uie-source-pills button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #292530;
+  border-radius: 7px;
+  background: #141217;
+  color: #9b91a7;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.uie-source-pills button[aria-pressed='true'] {
+  background: #292036;
+  border-color: #675078;
+  color: #d9c3f2;
+}
+.uie-source-pills span {
+  color: #82728f;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.uie-source-badge {
+  margin-left: 8px;
+  color: #77717f;
+  font-size: 8px;
+  letter-spacing: 0.2px;
+}
+.uie-source-note {
+  color: #90829c;
+  font-size: 11px;
+  margin: 0 0 22px !important;
+}
+.uie-motion-detail h1 {
+  overflow-wrap: anywhere;
+}
+.uie-motion-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  color: #b0a0bc;
+  font-size: 11px;
+}
+.uie-motion-facts > span {
+  padding: 5px 9px;
+  border: 1px solid #342b3e;
+  border-radius: 5px;
+  background: #18131f;
+}
+.uie-motion-stage {
+  background: #08070b;
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+}
+.uie-motion-stage video {
+  width: 100%;
+  max-height: 650px;
+  display: block;
+  aspect-ratio: 16/10;
+  object-fit: contain;
+}
+.uie-motion-controls {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 18px 0;
+}
+.uie-motion-preview > .uie-motion-controls {
+  padding: 18px;
+}
+.uie-motion-integration {
+  padding: 26px;
+  color: #a092b0;
+  font-size: 13px;
+  line-height: 1.9;
+}
+.uie-motion-integration h2 {
+  color: #e1d4eb;
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+.uie-motion-integration p {
+  margin-bottom: 15px;
+}
+.uie-motion-metadata {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 25px 0;
+  border: 1px solid #322939;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.uie-motion-metadata > div {
+  padding: 14px;
+  border: 1px solid #241e2b;
+}
+.uie-motion-metadata dt {
+  font-size: 10px;
+  color: #84728e;
+}
+.uie-motion-metadata dd {
+  font-size: 12px;
+  color: #c3b3d0;
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+}
+.uie-motion-callout {
+  border-left: 2px solid #79618f;
+  padding: 12px 18px;
+  margin: 20px 0;
+  background: #1a1420;
+}
+.uie-motion-detail .uie-prompt-heading {
+  flex-wrap: wrap;
+}
+@media (max-width: 780px) {
+  .uie-motion-metadata {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .uie-motion-integration {
+    padding: 17px;
+  }
+  .uie-source-pills button {
+    font-size: 11px;
+    padding: 7px 9px;
+  }
+  .uie-motion-stage {
+    min-height: 180px;
+  }
+  .uie-source-badge {
+    display: block;
+    margin-left: 0;
+  }
+  .uie-toolbar > .uie-select {
+    min-width: 135px;
+  }
+}
 .uie-app {
   --uie-bg: #0c0c0f;
   --uie-panel: #121215;
