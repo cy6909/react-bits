@@ -1,5 +1,6 @@
 import { componentMetadata } from '../constants/Information.js';
 import motionPromptsCatalog from './motion-prompts/catalog-data.js';
+import { personalAiCatalog } from './personal-ai/catalog.js';
 
 export const categoryLabels = {
   Components: ['交互组件', 'Components'],
@@ -267,9 +268,9 @@ export const reactBitsCatalog = Object.values(componentMetadata)
     return rank(a) - rank(b) || a.name.localeCompare(b.name);
   });
 
-export { motionPromptsCatalog };
-export const catalog = [...reactBitsCatalog, ...motionPromptsCatalog];
-export const sourceLabels = { 'react-bits': 'React Bits', 'motion-prompts': 'Motion Prompts' };
+export { motionPromptsCatalog, personalAiCatalog };
+export const catalog = [...reactBitsCatalog, ...motionPromptsCatalog, ...personalAiCatalog];
+export const sourceLabels = { 'react-bits': 'React Bits', 'motion-prompts': 'Motion Prompts', 'personal-ai': '个人 AI 实现' };
 
 export function filterCatalog(
   items,

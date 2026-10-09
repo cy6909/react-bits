@@ -2,7 +2,7 @@
 
 A Chinese-first personal library built on React Bits. Original component implementations and the upstream license remain intact.
 
-- Browse 463 entries: 215 React Bits components and 248 Motion Prompts designs, with Chinese names, bilingual navigation, source/category/search filters and local favorites.
+- Browse 470 entries: 215 React Bits components, 248 Motion Prompts designs and 7 personal AI implementations, with Chinese names, bilingual navigation, source/category/search filters and local favorites.
 - Preview upstream demos, finish/replay a session, inspect/download source variants, or copy the original upstream prompt in English or Chinese.
 - Prompts use the upstream Copy prompt template. English is unchanged; Chinese translates its instructions. Source code, dependencies and API property descriptions remain verbatim.
 - Source editing is local; installation, build, browser tests and Docker deployment run only on `10.89.2.12`.
@@ -21,7 +21,11 @@ This snapshot contains 30 complete public prompts and 218 official excerpts, pre
 
 On machine 12, regenerate with `node scripts/importMotionPrompts.mjs <official-repo-checkout> <public-api-catalog.json>`. Verify with `node scripts/checkMotionPrompts.mjs`; `public/motion-prompts/manifest.json` records the source commit and access counts. The shared AI index is `/personal-registry/index.json`.
 
-## Upstream project
+## Personal AI implementations
+
+The `personal-ai` group imports the user's archived M01–M06 and Calendar Cards HTML prototypes. Source downloads preserve the supplied bytes; M02–M06 share the original complete workbench and have separate scene previews. Iframes and response CSP isolate scripts from the library origin; leaving the preview disposes the iframe. Calendar Cards is the archived offline Web Animations API version, not the GSAP/Vite project. Only R01 has an archived original prompt. Model, reasoning effort, skill-loading and first-pass provenance remain unknown. See `public/personal-ai/NOTICE.txt` for source and asset boundaries.
+
+## Original React Bits README
 
 <div align="center">
 	<br>

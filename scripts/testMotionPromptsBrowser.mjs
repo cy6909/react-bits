@@ -82,12 +82,12 @@ try {
   await page.getByRole('heading', { name: 'Before integrating this design' }).waitFor();
   pass('New details follow the existing bilingual shell');
   const registry = await (await context.request.get(`${base}/personal-registry/index.json`)).json();
-  assert.equal(registry.items.length, 463);
+  assert.equal(registry.items.length, 470);
   assert.equal(registry.items.filter(x => x.source === 'motion-prompts').length, 248);
   assert.equal((await context.request.get(`${base}/motion-prompts/entries/not-real.json`)).status(), 404);
   assert.equal((await context.request.get(`${base}/motion-prompts/prompts/not-real.md`)).status(), 404);
   assert.deepEqual(errors, []);
-  pass('Unified AI index contains 463 items; missing resources return 404; no page exceptions');
+  pass('Unified AI index contains 470 items; missing resources return 404; no page exceptions');
   fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ status: 'passed', checks, errors }, null, 2));
 } catch (error) {
   await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true });

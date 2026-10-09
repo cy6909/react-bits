@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { catalog, reactBitsCatalog, motionPromptsCatalog, categoryLabels, filterCatalog, titlesZh } from './catalog.js';
+import { catalog, reactBitsCatalog, motionPromptsCatalog, personalAiCatalog, categoryLabels, filterCatalog, titlesZh } from './catalog.js';
 import { buildPrompt, buildPromptZh } from './upstreamPrompt.js';
 
 test('all imported entries have unique routes, stable IDs and Chinese names', () => {
@@ -15,7 +15,7 @@ test('all imported entries have unique routes, stable IDs and Chinese names', ()
 test('Motion Prompts public catalog merges without collisions or invented source availability', () => {
   assert.equal(reactBitsCatalog.length, 215);
   assert.equal(motionPromptsCatalog.length, 248);
-  assert.equal(catalog.length, 463);
+  assert.equal(catalog.length, 470);
   assert.equal(motionPromptsCatalog.filter(x => x.promptAccess === 'full').length, 30);
   assert.equal(motionPromptsCatalog.filter(x => x.promptAccess === 'preview').length, 218);
   for (const item of motionPromptsCatalog) {
@@ -29,6 +29,17 @@ test('Motion Prompts public catalog merges without collisions or invented source
   assert.equal(filterCatalog(catalog, { source: 'motion-prompts', category: 'ScrollEffects' }).length, 71);
   assert.equal(filterCatalog(catalog, { source: 'react-bits', access: 'preview' }).length, 0);
   assert.equal(filterCatalog(catalog, { source: 'motion-prompts', query: '轨道 轮播' })[0].slug, 'orbit-carousel-3d');
+});
+test('personal implementations preserve provenance and missing-prompt boundaries', () => {
+  assert.equal(personalAiCatalog.length, 7);
+  assert.equal(filterCatalog(catalog, { source: 'personal-ai' }).length, 7);
+  assert.equal(filterCatalog(catalog, { source: 'personal-ai', access: 'unavailable' }).length, 6);
+  assert.equal(filterCatalog(catalog, { source: 'personal-ai', query: 'M06' })[0].slug, 'm06');
+  assert.equal(new Set(personalAiCatalog.map(x => x.sourceUrl)).size, 3);
+  for (const item of personalAiCatalog) {
+    assert.equal(item.provenance.model, 'unknown');
+    assert.equal(item.provenance.firstPassVerified, false);
+  }
 });
 test('Chinese and English search compose with category and saved filters', () => {
   assert.equal(filterCatalog(catalog, { query: '纵深 轮播' })[0].name, 'DepthCarousel');

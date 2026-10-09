@@ -3,6 +3,8 @@ import path from 'node:path';
 import { componentMetadata } from '../src/constants/Information.js';
 import { createHash } from 'node:crypto';
 import motionItems from '../src/personal/motion-prompts/catalog-data.js';
+import './generatePersonalAi.mjs';
+import { personalAiCatalog } from '../src/personal/personal-ai/catalog.js';
 
 const output = path.resolve('public/personal-registry');
 fs.mkdirSync(output, { recursive: true });
@@ -72,14 +74,29 @@ items.push(
     url: item.detailUrl
   }))
 );
+items.push(
+  ...personalAiCatalog.map(item => ({
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    source: item.source,
+    path: item.path,
+    promptAccess: item.promptAccess,
+    url: item.detailUrl
+  }))
+);
 fs.writeFileSync(path.join(output, 'index.json'), JSON.stringify({ schemaVersion: 3, items }, null, 2) + '\n');
 fs.copyFileSync('LICENSE.md', 'public/LICENSE.md');
 fs.writeFileSync(
   'public/llms.txt',
-  `# UI / Bits — Personal React Bits library\n\nRead /personal-registry/index.json to discover ${items.length} catalog entries. Follow each item URL for available content, dependencies, SHA-256 checksums and its source-specific license. Only React Bits entries include component source variants. Resolve relative URLs against this origin.\n\nReact Bits prompts use the original Copy prompt. English is unchanged. Chinese translates its instructions while preserving source code, dependency names, API values and property descriptions. These prompts integrate supplied source; no invented standalone recreation specifications or model-generation claims are included. The live UI builds the prompt from the selected demo configuration; the reusable template is /personal-registry/upstreamPrompt.js.\n\nUpstream: https://github.com/DavidHDev/react-bits\nPersonal fork: https://github.com/cy6909/react-bits\nLicense: /LICENSE.md\n`
+  `# UI / Bits — Personal React Bits library\n\nRead /personal-registry/index.json to discover ${items.length} catalog entries. Follow each item URL for available content, dependencies, SHA-256 checksums and its source-specific license. React Bits entries include component source variants; personal-ai entries include archived HTML source. Resolve relative URLs against this origin.\n\nReact Bits prompts use the original Copy prompt. English is unchanged. Chinese translates its instructions while preserving source code, dependency names, API values and property descriptions. These prompts integrate supplied source; no invented standalone recreation specifications or model-generation claims are included. The live UI builds the prompt from the selected demo configuration; the reusable template is /personal-registry/upstreamPrompt.js.\n\nUpstream: https://github.com/DavidHDev/react-bits\nPersonal fork: https://github.com/cy6909/react-bits\nLicense: /LICENSE.md\n`
 );
 fs.appendFileSync(
   'public/llms.txt',
   '\n## Motion Prompts\nMotion Prompts entries link to official public metadata and prompt snapshots under /motion-prompts/. Thirty prompts are full public text; 218 are official excerpts only. Respect prompt.access and never treat excerpts as full prompts. This distribution does not include component source or copied media. Interactive demos open on motionprompts.dev; cross-site embedding is not supported. Preview images/videos remain upstream. License: /motion-prompts/LICENSE.txt (PolyForm Noncommercial 1.0.0 with attribution). Credit: https://motionprompts.dev . No invented or independently validated model-generation result is claimed.\n'
 );
 console.log(`Exported ${items.length} entries across React Bits and Motion Prompts.`);
+fs.appendFileSync(
+  'public/llms.txt',
+  '\n## Personal AI implementations\nSeven user-archived HTML prototypes are grouped under personal-ai. Follow their entry URLs for exact original HTML hashes and scope. M02-M06 share one original workbench with five scene previews. R01 uses Web Animations API, not the GSAP project. Only R01 has an archived original prompt; do not invent missing prompts or model/first-pass provenance. Fonts/media/design references retain their separate rights. Notice: /personal-ai/NOTICE.txt .\n'
+);

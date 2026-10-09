@@ -20,6 +20,7 @@ import { catalog, categoryLabels, descriptionsZh, filterCatalog, sourceLabels } 
 import { LocaleProvider, useLocale } from './Locale';
 import CopyButton from './CopyButton';
 import MotionPromptDetail from './MotionPromptDetail';
+import PersonalAiDetail from './PersonalAiDetail';
 import './personal.css';
 
 const DemoFrame = lazy(() => import('./DemoFrame'));
@@ -87,7 +88,7 @@ function VideoCover({ item, featured = false }) {
       {!posterFailed && (
         <img src={item.posterUrl} alt="" loading="lazy" className="uie-poster" onError={() => setPosterFailed(true)} />
       )}
-      {!failed && (
+      {!failed && item.videoUrl && (
         <video
           ref={video}
           src={visible ? item.videoUrl : undefined}
@@ -188,7 +189,7 @@ function Shell() {
         <p className="uie-nav-label">{t('工作空间', 'WORKSPACE')}</p>
         <Link
           onClick={() => setMenu(false)}
-          className={isHome && category === 'all' && !params.has('saved') ? 'active' : ''}
+          className={isHome && category === 'all' && source !== 'personal-ai' && !params.has('saved') ? 'active' : ''}
           to="/"
         >
           <Grid2X2 size={17} />
@@ -203,6 +204,15 @@ function Shell() {
           <Heart size={17} />
           {t('我的收藏', 'Saved')}
           <span>{saved.length}</span>
+        </Link>
+        <Link
+          to="/?source=personal-ai"
+          onClick={() => setMenu(false)}
+          className={source === 'personal-ai' || pathname.startsWith('/personal-ai/') ? 'active' : ''}
+        >
+          <Sparkles size={17} />
+          {t('个人 AI 实现', 'Personal AI')}
+          <span>7</span>
         </Link>
         <p className="uie-nav-label">{t('按类别探索', 'EXPLORE')}</p>
         {Object.entries(categoryLabels).map(([key, labels], index) => (
@@ -326,7 +336,7 @@ function Library({ saved, toggleSaved }) {
         <div className="uie-source-pills" role="group" aria-label={t('内容来源', 'Content source')}>
           {[['all', t('全部来源', 'All sources')], ...Object.entries(sourceLabels)].map(([key, label]) => (
             <button key={key} aria-pressed={source === key} onClick={() => update('source', key === 'all' ? '' : key)}>
-              {label}
+              {key === 'personal-ai' ? t('个人 AI 实现', 'Personal AI') : label}
               <span>{key === 'all' ? catalog.length : catalog.filter(x => x.source === key).length}</span>
             </button>
           ))}
@@ -363,9 +373,18 @@ function Library({ saved, toggleSaved }) {
               <option value="all">{t('全部提示词', 'All prompt access')}</option>
               <option value="full">{t('完整公开', 'Full public')}</option>
               <option value="preview">{t('仅官方预览', 'Official excerpt only')}</option>
+              <option value="unavailable">{t('未归档提示词', 'No archived prompt')}</option>
             </select>
           </label>
         </div>
+        {source === 'personal-ai' && (
+          <p className="uie-source-note">
+            {t(
+              '我的 7 个 AI 实现 · 可操作 HTML、原始源码与 Notion 记录。保留参考来源与实际验证范围。',
+              'My 7 AI implementations · Interactive HTML, original source and Notion records, with references and verification scope preserved.'
+            )}
+          </p>
+        )}
         {source === 'motion-prompts' && (
           <p className="uie-source-note">
             {t(
@@ -376,7 +395,7 @@ function Library({ saved, toggleSaved }) {
         )}
         <div className="uie-grid">
           {items.slice(0, limit).map(item => (
-            <article className="uie-card" key={item.id}>
+            <article className="uie-card" key={item.id} data-source={item.source}>
               <Link
                 className="uie-card-visual"
                 to={item.path}
@@ -388,7 +407,9 @@ function Library({ saved, toggleSaved }) {
                 <div>
                   <span className="uie-card-category">
                     {categoryLabels[item.category]?.[locale === 'zh' ? 0 : 1]}
-                    <span className="uie-source-badge">{sourceLabels[item.source]}</span>
+                    <span className="uie-source-badge">
+                      {item.source === 'personal-ai' ? t('个人 AI 实现', 'Personal AI') : sourceLabels[item.source]}
+                    </span>
                   </span>
                   <Link to={item.path}>
                     <h3>{locale === 'zh' ? item.titleZh : item.name}</h3>
@@ -509,6 +530,8 @@ function Detail({ saved, toggleSaved }) {
   const { pathname } = useLocation();
   const item = catalog.find(x => x.path === pathname);
   if (!item) return <NotFound />;
+  if (item.source === 'personal-ai')
+    return <PersonalAiDetail key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} />;
   return item.source === 'motion-prompts' ? (
     <MotionPromptDetail key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} />
   ) : (
