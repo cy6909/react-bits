@@ -38,6 +38,7 @@ AGENTS.md
 
 # Personal fork evidence
 test-results/
+.runtime/
 public/personal-ai/demos/
 public/personal-ai/entries/
 !AGENTS.md

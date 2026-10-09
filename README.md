@@ -2,7 +2,7 @@
 
 A Chinese-first personal library built on React Bits. Original component implementations and the upstream license remain intact.
 
-- Browse 470 entries: 215 React Bits components, 248 Motion Prompts designs and 7 personal AI implementations, with Chinese names, bilingual navigation, source/category/search filters and local favorites.
+- Browse 1,384 entries across six sources, with Chinese-first navigation, source/category/prompt-kind filters and local favorites. Counts include 75 reference links; they are not all locally runnable components.
 - Preview upstream demos, finish/replay a session, inspect/download source variants, or copy the original upstream prompt in English or Chinese.
 - Prompts use the upstream Copy prompt template. English is unchanged; Chinese translates its instructions. Source code, dependencies and API property descriptions remain verbatim.
 - Source editing is local; installation, build, browser tests and Docker deployment run only on `10.89.2.12`.
@@ -25,7 +25,18 @@ On machine 12, regenerate with `node scripts/importMotionPrompts.mjs <official-r
 
 The `personal-ai` group imports the user's archived M01–M06 and Calendar Cards HTML prototypes. Source downloads preserve the supplied bytes; M02–M06 share the original complete workbench and have separate scene previews. Iframes and response CSP isolate scripts from the library origin; leaving the preview disposes the iframe. Calendar Cards is the archived offline Web Animations API version, not the GSAP/Vite project. Only R01 has an archived original prompt. Model, reasoning effort, skill-loading and first-pass provenance remain unknown. See `public/personal-ai/NOTICE.txt` for source and asset boundaries.
 
-## Original React Bits README
+## Additional public libraries and source directory
+
+- MotionVault: 202 MIT effects with original English prompts, source bundles and a separate React 19 preview build. Upstream snapshot: `vendor/motion-vault/UPSTREAM.json`.
+- Shadcn Studio: 637 MIT registry source bundles from its public repository; demos open upstream. No original prompts were present in this imported distribution.
+- shadcn.io: 75 links from its official MIT README. That repository contains no component implementation source; Pro assets are not imported.
+- `/resources` and `/personal-registry/resources.json`: 16 reviewed website references, classified as recreation, source integration, visual intent, installation, or no prompt. These site references are counted separately from the component index.
+
+The original Motion Prompts, React Bits and personal AI imports remain distinct. aimotions requires written permission to republish its collection; it is linked rather than mirrored. Account-gated, paid and unconfirmed redistribution content stays at its official source. No weekly automation or model-generation job is enabled.
+
+Import snapshots on machine 12 with `node scripts/importOpenLibraries.mjs <reviewed-repositories-directory>` after installing the MotionVault locked dependencies there. `node scripts/checkOpenLibraries.mjs` checks every imported prompt/bundle hash and license reference. Each library retains its original MIT notice under `public/open-libraries/`.
+
+## Original project
 
 <div align="center">
 	<br>

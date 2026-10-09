@@ -31,6 +31,7 @@ try {
   assert.equal(await page.locator('.uie-card').count(), 24);
   await page.screenshot({ path: path.join(output, 'desktop-library.png'), fullPage: true });
   check('Chinese-first catalog, 24-card initial page');
+  await page.getByRole('button', { name: /^React Bits/ }).click();
   const search = page.getByRole('textbox', { name: '搜索组件' });
   await search.fill('纵深');
   await page.waitForFunction(() => document.querySelectorAll('.uie-card').length === 1);

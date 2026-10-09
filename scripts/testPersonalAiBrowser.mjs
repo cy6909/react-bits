@@ -159,10 +159,10 @@ try {
   assert.equal((await page.request.get(`${base}/personal-ai/source/missing.html`)).status(), 404);
   assert.equal((await page.request.get(`${base}/personal-ai/demos/missing.html`)).status(), 404);
   const registry = await (await page.request.get(`${base}/personal-registry/index.json`)).json();
-  assert.equal(registry.items.length, 470);
+  assert.equal(registry.items.length, 1384);
   assert.equal(registry.items.filter(x => x.source === 'personal-ai').length, 7);
   assert.deepEqual(errors, []);
-  pass('Search, favorites, mobile fit, bilingual provenance, 470-item registry and 404 boundaries');
+  pass('Search, favorites, mobile fit, bilingual provenance, 1384-item registry and 404 boundaries');
   fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ status: 'passed', checks, errors }, null, 2));
 } catch (error) {
   await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true });

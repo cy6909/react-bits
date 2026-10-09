@@ -15,7 +15,7 @@ test('all imported entries have unique routes, stable IDs and Chinese names', ()
 test('Motion Prompts public catalog merges without collisions or invented source availability', () => {
   assert.equal(reactBitsCatalog.length, 215);
   assert.equal(motionPromptsCatalog.length, 248);
-  assert.equal(catalog.length, 470);
+  assert.equal(catalog.length, 1384);
   assert.equal(motionPromptsCatalog.filter(x => x.promptAccess === 'full').length, 30);
   assert.equal(motionPromptsCatalog.filter(x => x.promptAccess === 'preview').length, 218);
   for (const item of motionPromptsCatalog) {
@@ -40,6 +40,13 @@ test('personal implementations preserve provenance and missing-prompt boundaries
     assert.equal(item.provenance.model, 'unknown');
     assert.equal(item.provenance.firstPassVerified, false);
   }
+});
+test('open library kinds distinguish prompts, source bundles and reference links', () => {
+  assert.equal(filterCatalog(catalog,{source:'motion-vault',kind:'recreation',access:'full'}).length,202);
+  assert.equal(filterCatalog(catalog,{source:'shadcn-studio',kind:'none'}).length,637);
+  assert.equal(filterCatalog(catalog,{source:'shadcn-io',access:'external'}).length,75);
+  assert.equal(filterCatalog(catalog,{source:'react-bits',kind:'recreation'}).length,0);
+  assert.equal(filterCatalog(catalog,{source:'react-bits',kind:'integration'}).length,215);
 });
 test('Chinese and English search compose with category and saved filters', () => {
   assert.equal(filterCatalog(catalog, { query: '纵深 轮播' })[0].name, 'DepthCarousel');

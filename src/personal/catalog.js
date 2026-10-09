@@ -1,6 +1,7 @@
 import { componentMetadata } from '../constants/Information.js';
 import motionPromptsCatalog from './motion-prompts/catalog-data.js';
 import { personalAiCatalog } from './personal-ai/catalog.js';
+import openLibraryCatalog from './open-libraries/catalog-data.js';
 
 export const categoryLabels = {
   Components: ['交互组件', 'Components'],
@@ -268,13 +269,27 @@ export const reactBitsCatalog = Object.values(componentMetadata)
     return rank(a) - rank(b) || a.name.localeCompare(b.name);
   });
 
-export { motionPromptsCatalog, personalAiCatalog };
-export const catalog = [...reactBitsCatalog, ...motionPromptsCatalog, ...personalAiCatalog];
-export const sourceLabels = { 'react-bits': 'React Bits', 'motion-prompts': 'Motion Prompts', 'personal-ai': '个人 AI 实现' };
+export { motionPromptsCatalog, personalAiCatalog, openLibraryCatalog };
+export const catalog = [...reactBitsCatalog, ...motionPromptsCatalog, ...personalAiCatalog, ...openLibraryCatalog];
+export const sourceLabels = {
+  'react-bits': 'React Bits',
+  'motion-prompts': 'Motion Prompts',
+  'personal-ai': '个人 AI 实现',
+  'motion-vault': 'MotionVault',
+  'shadcn-studio': 'Shadcn Studio',
+  'shadcn-io': 'shadcn.io'
+};
+export const getPromptKind = item =>
+  item.promptKind === 'user-provided-original'
+    ? 'recreation'
+    : item.promptKind === 'not-archived'
+      ? 'none'
+      : item.promptKind ||
+        (item.source === 'react-bits' ? 'integration' : item.source === 'motion-prompts' ? 'recreation' : 'unknown');
 
 export function filterCatalog(
   items,
-  { query = '', category = 'all', source = 'all', access = 'all', savedOnly = false, saved = [] } = {}
+  { query = '', category = 'all', source = 'all', access = 'all', kind = 'all', savedOnly = false, saved = [] } = {}
 ) {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   return items.filter(item => {
@@ -292,6 +307,7 @@ export function filterCatalog(
     return (
       (category === 'all' || category === item.category) &&
       (source === 'all' || source === item.source) &&
+      (kind === 'all' || getPromptKind(item) === kind) &&
       (access === 'all' ||
         (access === 'full'
           ? item.source === 'react-bits' || item.promptAccess === 'full'

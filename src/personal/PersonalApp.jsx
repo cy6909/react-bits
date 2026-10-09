@@ -21,6 +21,9 @@ import { LocaleProvider, useLocale } from './Locale';
 import CopyButton from './CopyButton';
 import MotionPromptDetail from './MotionPromptDetail';
 import PersonalAiDetail from './PersonalAiDetail';
+import OpenLibraryDetail from './OpenLibraryDetail';
+import ResourceDirectory from './ResourceDirectory';
+import { promptKindLabels } from './open-libraries/resources';
 import './personal.css';
 
 const DemoFrame = lazy(() => import('./DemoFrame'));
@@ -85,7 +88,7 @@ function VideoCover({ item, featured = false }) {
       onFocus={play}
     >
       <span className="uie-cover-fallback">{item.name}</span>
-      {!posterFailed && (
+      {item.posterUrl && !posterFailed && (
         <img src={item.posterUrl} alt="" loading="lazy" className="uie-poster" onError={() => setPosterFailed(true)} />
       )}
       {!failed && item.videoUrl && (
@@ -214,6 +217,11 @@ function Shell() {
           {t('个人 AI 实现', 'Personal AI')}
           <span>7</span>
         </Link>
+        <Link to="/resources" onClick={() => setMenu(false)} className={pathname === '/resources' ? 'active' : ''}>
+          <Layers size={17} />
+          {t('资源站导航', 'Source directory')}
+          <span>16</span>
+        </Link>
         <p className="uie-nav-label">{t('按类别探索', 'EXPLORE')}</p>
         {Object.entries(categoryLabels).map(([key, labels], index) => (
           <Link
@@ -254,6 +262,7 @@ function Shell() {
       <main id="main" className="uie-main">
         <Routes>
           <Route path="/" element={<Library saved={saved} toggleSaved={toggleSaved} />} />
+          <Route path="/resources" element={<ResourceDirectory />} />
           <Route path="/:category/:subcategory" element={<Detail saved={saved} toggleSaved={toggleSaved} />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -270,6 +279,7 @@ function Library({ saved, toggleSaved }) {
   const category = params.get('category') || 'all';
   const source = params.get('source') || 'all';
   const access = params.get('access') || 'all';
+  const kind = params.get('kind') || 'all';
   const savedOnly = params.get('saved') === '1';
   const update = (key, value) => {
     const p = new URLSearchParams(params);
@@ -277,9 +287,9 @@ function Library({ saved, toggleSaved }) {
     else p.delete(key);
     setParams(p, { replace: true });
   };
-  useEffect(() => setLimit(24), [query, category, source, access, savedOnly]);
-  const items = filterCatalog(catalog, { query, category, source, access, savedOnly, saved });
-  const hero = !query && category === 'all' && source === 'all' && access === 'all' && !savedOnly;
+  useEffect(() => setLimit(24), [query, category, source, access, kind, savedOnly]);
+  const items = filterCatalog(catalog, { query, category, source, access, kind, savedOnly, saved });
+  const hero = !query && category === 'all' && source === 'all' && access === 'all' && kind === 'all' && !savedOnly;
   useEffect(() => {
     document.title = t('UI / Bits · 我的动效收藏库', 'UI / Bits · Personal collection');
   }, [locale, t]);
@@ -374,9 +384,46 @@ function Library({ saved, toggleSaved }) {
               <option value="full">{t('完整公开', 'Full public')}</option>
               <option value="preview">{t('仅官方预览', 'Official excerpt only')}</option>
               <option value="unavailable">{t('未归档提示词', 'No archived prompt')}</option>
+              <option value="external">{t('原站获取', 'Get upstream')}</option>
             </select>
           </label>
         </div>
+        <div className="uie-kind-filter">
+          <label>
+            {t('提示词性质', 'Prompt kind')}{' '}
+            <select
+              aria-label={t('提示词性质', 'Prompt kind')}
+              value={kind}
+              onChange={e => update('kind', e.target.value === 'all' ? '' : e.target.value)}
+            >
+              <option value="all">{t('全部性质', 'All kinds')}</option>
+              {Object.entries(promptKindLabels).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label[locale === 'zh' ? 0 : 1]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Link to="/resources">{t('查看 16 个资源站及接入范围', 'View 16 sources and import scope')} ↗</Link>
+        </div>
+        {['motion-vault', 'shadcn-studio', 'shadcn-io'].includes(source) && (
+          <p className="uie-source-note">
+            {source === 'motion-vault'
+              ? t(
+                  '202 个上游实现 · 原始英文 Prompt + TSX 源码 · 本地按需体验',
+                  '202 upstream implementations · Original English prompts + TSX · On-demand local previews'
+                )
+              : source === 'shadcn-studio'
+                ? t(
+                    '637 份 MIT 源码包 · 未归档原始 Prompt · 演示在原站打开',
+                    '637 MIT source bundles · No archived original prompts · Demos open upstream'
+                  )
+                : t(
+                    '75 个官方 README 参考链接 · 未导入组件实现源码',
+                    '75 official README reference links · No component implementation source imported'
+                  )}
+          </p>
+        )}
         {source === 'personal-ai' && (
           <p className="uie-source-note">
             {t(
@@ -530,6 +577,8 @@ function Detail({ saved, toggleSaved }) {
   const { pathname } = useLocation();
   const item = catalog.find(x => x.path === pathname);
   if (!item) return <NotFound />;
+  if (item.detailUrl?.startsWith('/open-libraries/'))
+    return <OpenLibraryDetail key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} />;
   if (item.source === 'personal-ai')
     return <PersonalAiDetail key={item.id} item={item} saved={saved} toggleSaved={toggleSaved} />;
   return item.source === 'motion-prompts' ? (
