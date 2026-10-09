@@ -313,6 +313,9 @@ const TabsLayout = ({ children, className }) => {
   const showFullscreen = category === 'backgrounds' && isPreview && canFullscreen();
   const hasOverflowActions = showFavorite || Boolean(codeExampleProps) || Boolean(studioButtonProps) || showFullscreen;
 
+  // A prompt-only load extracts the original data without mounting WebGL or animation children.
+  if (new URLSearchParams(window.location.search).get('promptOnly') === '1') return null;
+
   return (
     <Tabs.Root
       w="100%"

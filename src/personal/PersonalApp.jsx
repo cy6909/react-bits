@@ -490,7 +490,7 @@ function Detail({ saved, toggleSaved }) {
 }
 function DetailContent({ item, saved, toggleSaved }) {
   const { locale, t } = useLocale();
-  const [tab, setTab] = useState('preview');
+  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get('view') === 'prompt' ? 'prompt' : 'preview');
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState('playing');
   const frameRef = useRef(null);
@@ -695,7 +695,7 @@ function DetailContent({ item, saved, toggleSaved }) {
                   key={`${item.id}-prompt-${round}`}
                   hidden
                   title="Original prompt loader"
-                  src={`/preview${item.path}?lang=${locale}`}
+                  src={`/preview${item.path}?lang=${locale}&promptOnly=1`}
                   sandbox="allow-scripts allow-same-origin"
                 />
               </>

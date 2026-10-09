@@ -94,6 +94,11 @@ try {
   await page.getByRole('button', { name: '复制原版提示词', exact: true }).click();
   await page.screenshot({ path: path.join(output, 'desktop-prompt.png'), fullPage: true });
   check('Original upstream prompt in Chinese and English with identical code blocks');
+  await page.goto(`${base}/backgrounds/aurora?view=prompt`, { waitUntil: 'networkidle' });
+  await page.locator('.uie-prompt pre').waitFor();
+  assert.match(await page.locator('.uie-prompt pre').innerText(), /<Aurora/);
+  assert.equal(await page.locator('iframe').count(), 0);
+  check('Prompt-only deep link extracts upstream data without keeping the graphics demo running');
   const missing = await context.request.get(`${base}/personal-registry/not-real.json`);
   assert.equal(missing.status(), 404);
   const registry = await context.request.get(`${base}/personal-registry/index.json`);
