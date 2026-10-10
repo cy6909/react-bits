@@ -710,11 +710,30 @@ profiles['image-trail'] = {
 categoryChildren.Animations.unshift('image-trail');
 categoryChildren.Components.push('carousel', 'gallery', 'objects', 'text-layout', 'hooks');
 categoryChildren.Micro.push('cards');
-categoryChildren.Animations.push('carousel', 'accordion');
+categoryChildren.Animations.push('carousel', 'accordion', 'calendar', 'scene');
+categoryChildren.ThreeD.push('grid');
+profiles.light = {
+  id: 'light',
+  labels: ['光线与光幕', 'Light & beams'],
+  pattern: /beam|veil|fiber|light|plasma|radar|scanner|rays|web.threads|lamp|caustic|circuit|光|扫描/i,
+  what: [
+    '以光线、光幕或明暗变化构成画面氛围。',
+    'Builds atmosphere through beams, light fields or changes in brightness.'
+  ],
+  where: ['品牌首屏、科技主题、内容展示背景', 'Brand heroes, technical themes and showcase backgrounds'],
+  why: [
+    '光照层次提供方向与空间感，适合衬托前景；文字区域应保留足够对比。',
+    'Light layers convey direction and depth behind content; preserve text contrast.'
+  ],
+  concept: 'glow'
+};
+categoryChildren.Backgrounds.push('light');
 profiles.accordion.pattern = /accordion|collapsible|collapse|expand|折叠|展开/i;
 profiles.carousel.pattern = /carousel|slider|loop|轮播|循环/i;
-profiles.scene.pattern = /scene|landscape|terrain|orb|prism|eye|balatro|场景|地形/i;
-profiles.texture.pattern = /texture|cloth|fabric|silk|metal|topo|ripple|材质|纹理|金属|波纹/i;
+profiles.scene.pattern = /scene|landscape|terrain|orb|prism|eye|balatro|galaxy|day.night|map|场景|地形|昼夜|地图/i;
+profiles.texture.pattern = /texture|cloth|fabric|silk|metal|topo|ripple|glass|dither|材质|纹理|金属|波纹|玻璃|抖色/i;
+profiles.particles.pattern = /particle|confetti|spark|dust|snow|rain|trail|starfield|粒子|彩带|火花|轨迹|雪|星空/i;
+profiles.physics.pattern = /spring|elastic|drag|bounce|physics|jelly|meta.balls|peel|弹簧|弹性|拖动|拖拽|回弹|撕|剥离/i;
 for (const category of Object.keys(categoryChildren)) {
   if (category === 'Footers') continue;
   const id = `other-${category}`;
