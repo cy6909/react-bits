@@ -5,11 +5,9 @@ A Chinese-first personal library built on React Bits. Original component impleme
 - Browse 1,384 entries across six sources, with Chinese-first navigation, source/category/prompt-kind filters and local favorites. Counts include 75 reference links; they are not all locally runnable components.
 - Preview upstream demos, finish/replay a session, inspect/download source variants, or copy the original upstream prompt in English or Chinese.
 - Prompts use the upstream Copy prompt template. English is unchanged; Chinese translates its instructions. Source code, dependencies and API property descriptions remain verbatim.
-- Source editing is local; installation, build, browser tests and Docker deployment run only on `10.89.2.12`.
-- Personal entry: `src/personal/PersonalApp.jsx`. Build on machine 12 with `npm ci` and `npm run build:personal`.
-- Container deployment: `UIE_BIND_ADDRESS=10.89.2.12 docker compose -f compose.personal.yaml up -d --build` (default port 18120).
-- Optional poster regeneration on machine 12 requires FFmpeg: `node scripts/generatePersonalPosters.mjs`.
-- Project knowledge: https://app.notion.com/p/3f490f837c9581998619fc1bad80b228
+- Personal entry: `src/personal/PersonalApp.jsx`. Build with `npm ci` and `npm run build:personal`.
+- Container deployment: `docker compose -f compose.personal.yaml up -d --build` (default port 18120).
+- Optional poster regeneration requires FFmpeg: `node scripts/generatePersonalPosters.mjs`.
 
 Component descriptions and some upstream demo controls remain in English. Chinese titles and the personal shell cover all catalog entries; the React Bits Copy prompt supports both Chinese and English. This is not an official React Bits translation.
 
@@ -19,7 +17,7 @@ Attribution: [motionprompts.dev · Vanguardia](https://motionprompts.dev). The o
 
 This snapshot contains 30 complete public prompts and 218 official excerpts, preserved verbatim in English. No paid full prompts, component source or demo media are redistributed. Images and preview videos load from the original provider; live interactions open there in a new tab. These are catalog entries and public design references, not 248 locally implemented React components or verified prompt-only reproductions.
 
-On machine 12, regenerate with `node scripts/importMotionPrompts.mjs <official-repo-checkout> <public-api-catalog.json>`. Verify with `node scripts/checkMotionPrompts.mjs`; `public/motion-prompts/manifest.json` records the source commit and access counts. The shared AI index is `/personal-registry/index.json`.
+Regenerate with `node scripts/importMotionPrompts.mjs <official-repo-checkout> <public-api-catalog.json>`. Verify with `node scripts/checkMotionPrompts.mjs`; `public/motion-prompts/manifest.json` records the source commit and access counts. The shared AI index is `/personal-registry/index.json`.
 
 ## Personal AI implementations
 
@@ -34,7 +32,7 @@ The `personal-ai` group imports the user's archived M01–M06 and Calendar Cards
 
 The original Motion Prompts, React Bits and personal AI imports remain distinct. aimotions requires written permission to republish its collection; it is linked rather than mirrored. Account-gated, paid and unconfirmed redistribution content stays at its official source. No weekly automation or model-generation job is enabled.
 
-Import snapshots on machine 12 with `node scripts/importOpenLibraries.mjs <reviewed-repositories-directory>` after installing the MotionVault locked dependencies there. `node scripts/checkOpenLibraries.mjs` checks every imported prompt/bundle hash and license reference. Each library retains its original MIT notice under `public/open-libraries/`.
+Import snapshots with `node scripts/importOpenLibraries.mjs <reviewed-repositories-directory>` after installing the MotionVault locked dependencies there. `node scripts/checkOpenLibraries.mjs` checks every imported prompt/bundle hash and license reference. Each library retains its original MIT notice under `public/open-libraries/`.
 
 ## Original project
 
