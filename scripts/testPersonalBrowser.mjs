@@ -33,6 +33,7 @@ try {
   check('Chinese-first catalog, 24-card initial page');
   await page.getByRole('button', { name: /^React Bits/ }).click();
   const search = page.getByRole('textbox', { name: '搜索组件' });
+  await page.getByRole('combobox', { name: '搜索方式' }).selectOption('keyword');
   await search.fill('纵深');
   await page.waitForFunction(() => document.querySelectorAll('.uie-card').length === 1);
   await page.reload({ waitUntil: 'networkidle' });
@@ -120,6 +121,7 @@ try {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(base, { waitUntil: 'networkidle' });
   assert.ok(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches));
+  await page.getByRole('combobox', { name: '搜索方式' }).selectOption('keyword');
   await page.getByRole('textbox', { name: '搜索组件' }).fill('BlurText');
   await page.waitForFunction(() => document.querySelectorAll('.uie-card').length === 1);
   check('Reduced-motion catalog remains functional');

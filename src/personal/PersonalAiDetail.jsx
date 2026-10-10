@@ -1,3 +1,4 @@
+import ItemGuide from './discovery/ItemGuide';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowUpRight, Code2, Download, Heart, Info, Play, RotateCcw, Sparkles } from 'lucide-react';
@@ -59,6 +60,7 @@ export default function PersonalAiDetail({ item, saved, toggleSaved }) {
           {t('Notion 原始归档', 'Notion archive')} ↗
         </a>
       </div>
+      <ItemGuide item={item} />
       <div className="uie-detail-tabs" role="tablist" aria-label={t('个人实现详情', 'Personal implementation details')}>
         {[
           ['preview', t('效果预览', 'Preview'), Play],

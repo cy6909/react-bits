@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { Component, Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Link, Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import {
   ArrowDown,
@@ -23,6 +23,10 @@ import MotionPromptDetail from './MotionPromptDetail';
 import PersonalAiDetail from './PersonalAiDetail';
 import OpenLibraryDetail from './OpenLibraryDetail';
 import ResourceDirectory from './ResourceDirectory';
+import ItemGuide, { FeatureTags } from './discovery/ItemGuide';
+import { subcategories, subcategoryById } from './discovery/taxonomy';
+import { tagById, facetLabels } from './discovery/concepts';
+import { rankByIntent, parseIntent } from './discovery/search';
 import { promptKindLabels } from './open-libraries/resources';
 import './personal.css';
 
@@ -134,8 +138,15 @@ function Shell() {
     });
   const category = params.get('category') || 'all';
   const source = params.get('source') || 'all';
-  const nav = (value, favorites = false) =>
-    `/?${new URLSearchParams({ ...(value !== 'all' ? { category: value } : {}), ...(source !== 'all' ? { source } : {}), ...(favorites ? { saved: '1' } : {}) })}`;
+  const nav = (value, favorites = false, sub = '') => {
+    const next = new URLSearchParams(isHome ? params : {});
+    next.delete('sub');
+    if (value === 'all') next.delete('category');
+    else next.set('category', value);
+    if (favorites) next.set('saved', '1');
+    if (sub) next.set('sub', sub);
+    return `/?${next}`;
+  };
   const isHome = pathname === '/';
   return (
     <div className="uie-app">
@@ -224,16 +235,37 @@ function Shell() {
         </Link>
         <p className="uie-nav-label">{t('按类别探索', 'EXPLORE')}</p>
         {Object.entries(categoryLabels).map(([key, labels], index) => (
-          <Link
-            key={key}
-            to={nav(key)}
-            onClick={() => setMenu(false)}
-            className={isHome && category === key ? 'active' : ''}
-          >
-            <span className="uie-category-dot" data-tone={index} />
-            {labels[locale === 'zh' ? 0 : 1]}
-            <span>{catalog.filter(x => x.category === key && (source === 'all' || x.source === source)).length}</span>
-          </Link>
+          <div className="uie-category-tree" key={key}>
+            <Link to={nav(key)} onClick={() => setMenu(false)} className={isHome && category === key ? 'active' : ''}>
+              <span className="uie-category-dot" data-tone={index} />
+              {labels[locale === 'zh' ? 0 : 1]}
+              <span>{catalog.filter(x => x.category === key && (source === 'all' || x.source === source)).length}</span>
+            </Link>
+            {isHome && category === key && (
+              <div className="uie-subnav">
+                {subcategories
+                  .filter(sub => sub.category === key)
+                  .map(sub => {
+                    const count = catalog.filter(
+                      item => item.subcategory === sub.id && (source === 'all' || item.source === source)
+                    ).length;
+                    return (
+                      count > 0 && (
+                        <Link
+                          key={sub.id}
+                          to={nav(key, false, sub.id)}
+                          onClick={() => setMenu(false)}
+                          aria-current={params.get('sub') === sub.id ? 'page' : undefined}
+                        >
+                          {sub.labels[locale === 'zh' ? 0 : 1]}
+                          <span>{count}</span>
+                        </Link>
+                      )
+                    );
+                  })}
+              </div>
+            )}
+          </div>
         ))}
         <div className="uie-side-note">
           <span className="uie-note-icon">✳</span>
@@ -280,16 +312,43 @@ function Library({ saved, toggleSaved }) {
   const source = params.get('source') || 'all';
   const access = params.get('access') || 'all';
   const kind = params.get('kind') || 'all';
+  const subcategory = params.get('sub') || 'all';
+  const tag = params.get('tag') || 'all';
+  const mode = params.get('mode') === 'keyword' ? 'keyword' : 'intent';
   const savedOnly = params.get('saved') === '1';
   const update = (key, value) => {
     const p = new URLSearchParams(params);
+    if (key === 'category') p.delete('sub');
     if (value) p.set(key, value);
     else p.delete(key);
     setParams(p, { replace: true });
   };
-  useEffect(() => setLimit(24), [query, category, source, access, kind, savedOnly]);
-  const items = filterCatalog(catalog, { query, category, source, access, kind, savedOnly, saved });
-  const hero = !query && category === 'all' && source === 'all' && access === 'all' && kind === 'all' && !savedOnly;
+  useEffect(() => setLimit(24), [query, category, source, access, kind, savedOnly, subcategory, tag, mode]);
+  const results = useMemo(() => {
+    const filtered = filterCatalog(catalog, {
+      query: mode === 'keyword' ? query : '',
+      category,
+      subcategory,
+      tag,
+      source,
+      access,
+      kind,
+      savedOnly,
+      saved
+    });
+    return mode === 'intent' ? rankByIntent(filtered, query) : filtered.map(item => ({ item, reasons: [] }));
+  }, [query, category, subcategory, tag, source, access, kind, savedOnly, saved, mode]);
+  const items = results.map(result => result.item);
+  const intent = useMemo(() => parseIntent(query), [query]);
+  const hero =
+    !query &&
+    category === 'all' &&
+    source === 'all' &&
+    access === 'all' &&
+    kind === 'all' &&
+    !savedOnly &&
+    tag === 'all' &&
+    subcategory === 'all';
   useEffect(() => {
     document.title = t('UI / Bits · 我的动效收藏库', 'UI / Bits · Personal collection');
   }, [locale, t]);
@@ -358,13 +417,23 @@ function Library({ saved, toggleSaved }) {
               aria-label={t('搜索组件', 'Search components')}
               value={query}
               onChange={e => update('q', e.target.value)}
-              placeholder={t('搜索动效、组件名称或关键词…', 'Search effects, components or keywords…')}
+              placeholder={t(
+                '描述用途或效果，例如：拖动票根展开',
+                'Describe a use or effect, e.g. a draggable ticket reveal'
+              )}
             />
             {query && (
               <button aria-label={t('清空搜索', 'Clear search')} onClick={() => update('q', '')}>
                 <X size={16} />
               </button>
             )}
+          </label>
+          <label className="uie-select">
+            <span className="uie-sr-only">{t('搜索方式', 'Search mode')}</span>
+            <select value={mode} onChange={e => update('mode', e.target.value === 'intent' ? '' : e.target.value)}>
+              <option value="intent">{t('意图搜索', 'Intent search')}</option>
+              <option value="keyword">{t('关键词', 'Keywords')}</option>
+            </select>
           </label>
           <label className="uie-select">
             <span className="uie-sr-only">{t('类别筛选', 'Category filter')}</span>
@@ -387,6 +456,98 @@ function Library({ saved, toggleSaved }) {
               <option value="external">{t('原站获取', 'Get upstream')}</option>
             </select>
           </label>
+        </div>
+        <div className="uie-discovery-filters">
+          {category !== 'all' && (
+            <label>
+              {t('子类', 'Subcategory')}
+              <select
+                aria-label={t('子类筛选', 'Subcategory filter')}
+                value={subcategory}
+                onChange={e => update('sub', e.target.value === 'all' ? '' : e.target.value)}
+              >
+                <option value="all">{t('全部子类', 'All subcategories')}</option>
+                {subcategories
+                  .filter(sub => sub.category === category)
+                  .map(sub => {
+                    const count = catalog.filter(
+                      item => item.subcategory === sub.id && (source === 'all' || item.source === source)
+                    ).length;
+                    return (
+                      (count > 0 || sub.id === subcategory) && (
+                        <option key={sub.id} value={sub.id}>
+                          {sub.labels[locale === 'zh' ? 0 : 1]} · {count}
+                        </option>
+                      )
+                    );
+                  })}
+              </select>
+            </label>
+          )}
+          <label>
+            {t('标签', 'Trait')}
+            <select
+              aria-label={t('标签筛选', 'Tag filter')}
+              value={tag}
+              onChange={e => update('tag', e.target.value === 'all' ? '' : e.target.value)}
+            >
+              <option value="all">{t('全部标签', 'All traits')}</option>
+              {Object.entries(facetLabels).map(([facet, labels]) => (
+                <optgroup key={facet} label={labels[locale === 'zh' ? 0 : 1]}>
+                  {Object.values(tagById)
+                    .filter(t => t.facet === facet)
+                    .map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.labels[locale === 'zh' ? 0 : 1]}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          {(tag !== 'all' || subcategory !== 'all') && (
+            <button
+              onClick={() => {
+                const p = new URLSearchParams(params);
+                p.delete('sub');
+                p.delete('tag');
+                setParams(p);
+              }}
+            >
+              {t('清除子类与标签', 'Clear subcategory and trait')} ×
+            </button>
+          )}
+        </div>
+        <div className="uie-search-help">
+          <p>
+            {mode === 'intent'
+              ? t(
+                  '按用途、交互和视觉特点匹配；支持中英同义词及“不要…”排除。',
+                  'Matches uses, interactions and visual traits, with bilingual synonyms and “without…” exclusions.'
+                )
+              : t('按原始名称、说明与关键词查找。', 'Search original names, descriptions and keywords.')}
+          </p>
+          {!query && (
+            <div>
+              {(locale === 'zh'
+                ? ['适合会员卡的展开效果', '拖动票根展开', '柔和背景，不要粒子']
+                : ['expand a membership card', 'draggable ticket reveal', 'subtle background without particles']
+              ).map(text => (
+                <button key={text} onClick={() => update('q', text)}>
+                  {text} ↗
+                </button>
+              ))}
+            </div>
+          )}
+          {query && mode === 'intent' && (
+            <p aria-live="polite">
+              {t('理解为：', 'Interpreted as: ')}
+              {intent.positive.map(id => tagById[id].labels[locale === 'zh' ? 0 : 1]).join(' · ') ||
+                t('描述关键词匹配', 'Descriptive keywords')}
+              {intent.negative.length > 0 &&
+                ` / ${t('排除：', 'Exclude: ')}${intent.negative.map(id => tagById[id].labels[locale === 'zh' ? 0 : 1]).join(' · ')}`}
+            </p>
+          )}
         </div>
         <div className="uie-kind-filter">
           <label>
@@ -441,7 +602,7 @@ function Library({ saved, toggleSaved }) {
           </p>
         )}
         <div className="uie-grid">
-          {items.slice(0, limit).map(item => (
+          {results.slice(0, limit).map(({ item, reasons }) => (
             <article className="uie-card" key={item.id} data-source={item.source}>
               <Link
                 className="uie-card-visual"
@@ -453,7 +614,7 @@ function Library({ saved, toggleSaved }) {
               <div className="uie-card-info">
                 <div>
                   <span className="uie-card-category">
-                    {categoryLabels[item.category]?.[locale === 'zh' ? 0 : 1]}
+                    {subcategoryById[item.subcategory]?.labels[locale === 'zh' ? 0 : 1]}
                     <span className="uie-source-badge">
                       {item.source === 'personal-ai' ? t('个人 AI 实现', 'Personal AI') : sourceLabels[item.source]}
                     </span>
@@ -471,6 +632,16 @@ function Library({ saved, toggleSaved }) {
                 >
                   <Heart size={17} fill={saved.includes(item.id) ? 'currentColor' : 'none'} />
                 </button>
+              </div>
+              <div className="uie-card-guide">
+                <p>{item.guide.what[locale === 'zh' ? 0 : 1]}</p>
+                <FeatureTags item={item} compact onSelect={id => update('tag', id)} />
+                {query && reasons.length > 0 && (
+                  <small className="uie-match-reasons">
+                    {t('匹配：', 'Matches: ')}
+                    {reasons.map(reason => reason.labels[locale === 'zh' ? 0 : 1]).join(' · ')}
+                  </small>
+                )}
               </div>
             </article>
           ))}
@@ -653,6 +824,7 @@ function DetailContent({ item, saved, toggleSaved }) {
       {locale === 'zh' && !descriptionsZh[item.name] && (
         <p className="uie-original-note">以上为上游原始说明；组件名称、导航与操作已中文化。</p>
       )}
+      <ItemGuide item={item} />
       <div className="uie-detail-tabs" role="tablist" aria-label={t('组件详情', 'Component details')}>
         {[
           ['preview', t('效果预览', 'Preview'), Play],

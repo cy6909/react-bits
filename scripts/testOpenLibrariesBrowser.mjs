@@ -30,6 +30,7 @@ try {
   pass('16 distinct source entries, access notes and source-type search');
   await page.goto(`${base}/?source=motion-vault&kind=recreation`);
   await page.getByRole('heading', { name: /探索组件.*202/ }).waitFor();
+  await page.getByRole('combobox', { name: '搜索方式' }).selectOption('keyword');
   await page.getByRole('textbox', { name: '搜索组件' }).fill('模糊浮现');
   await page.waitForFunction(() => document.querySelectorAll('.uie-card').length === 1);
   await page.getByRole('button', { name: '收藏 模糊浮现', exact: true }).click();

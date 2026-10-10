@@ -2,6 +2,7 @@ import { componentMetadata } from '../constants/Information.js';
 import motionPromptsCatalog from './motion-prompts/catalog-data.js';
 import { personalAiCatalog } from './personal-ai/catalog.js';
 import openLibraryCatalog from './open-libraries/catalog-data.js';
+import { enrichItem } from './discovery/enrich.js';
 
 export const categoryLabels = {
   Components: ['交互组件', 'Components'],
@@ -270,7 +271,9 @@ export const reactBitsCatalog = Object.values(componentMetadata)
   });
 
 export { motionPromptsCatalog, personalAiCatalog, openLibraryCatalog };
-export const catalog = [...reactBitsCatalog, ...motionPromptsCatalog, ...personalAiCatalog, ...openLibraryCatalog];
+export const catalog = [...reactBitsCatalog, ...motionPromptsCatalog, ...personalAiCatalog, ...openLibraryCatalog].map(
+  enrichItem
+);
 export const sourceLabels = {
   'react-bits': 'React Bits',
   'motion-prompts': 'Motion Prompts',
@@ -289,7 +292,17 @@ export const getPromptKind = item =>
 
 export function filterCatalog(
   items,
-  { query = '', category = 'all', source = 'all', access = 'all', kind = 'all', savedOnly = false, saved = [] } = {}
+  {
+    query = '',
+    category = 'all',
+    subcategory = 'all',
+    tag = 'all',
+    source = 'all',
+    access = 'all',
+    kind = 'all',
+    savedOnly = false,
+    saved = []
+  } = {}
 ) {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   return items.filter(item => {
@@ -306,6 +319,8 @@ export function filterCatalog(
       .toLocaleLowerCase();
     return (
       (category === 'all' || category === item.category) &&
+      (subcategory === 'all' || subcategory === item.subcategory) &&
+      (tag === 'all' || item.discoveryTags?.some(t => t.id === tag)) &&
       (source === 'all' || source === item.source) &&
       (kind === 'all' || getPromptKind(item) === kind) &&
       (access === 'all' ||

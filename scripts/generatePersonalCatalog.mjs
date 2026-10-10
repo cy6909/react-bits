@@ -8,6 +8,8 @@ import { personalAiCatalog } from '../src/personal/personal-ai/catalog.js';
 import openItems from '../src/personal/open-libraries/catalog-data.js';
 import { resources } from '../src/personal/open-libraries/resources.js';
 import { getPromptKind, catalog } from '../src/personal/catalog.js';
+import { subcategories } from '../src/personal/discovery/taxonomy.js';
+import { tagById, facetLabels } from '../src/personal/discovery/concepts.js';
 
 const output = path.resolve('public/personal-registry');
 fs.mkdirSync(output, { recursive: true });
@@ -104,7 +106,34 @@ items.push(
 items.forEach(item => {
   item.promptKind ||= getPromptKind(catalog.find(entry => entry.id === item.id));
 });
-fs.writeFileSync(path.join(output, 'index.json'), JSON.stringify({ schemaVersion: 3, items }, null, 2) + '\n');
+for (const item of items) {
+  const enriched = catalog.find(entry => entry.id === item.id);
+  item.subcategory = enriched.subcategory;
+  item.traits = enriched.discoveryTags.map(tag => tag.id);
+}
+fs.writeFileSync(
+  path.join(output, 'discovery.json'),
+  JSON.stringify(
+    {
+      schemaVersion: 1,
+      subcategories,
+      tags: Object.values(tagById),
+      facets: facetLabels,
+      items: catalog.map(({ id, subcategory, discoveryTags, guide }) => ({
+        id,
+        subcategory,
+        tags: discoveryTags,
+        guide
+      }))
+    },
+    null,
+    2
+  ) + '\n'
+);
+fs.writeFileSync(
+  path.join(output, 'index.json'),
+  JSON.stringify({ schemaVersion: 3, discoveryUrl: '/personal-registry/discovery.json', items }, null, 2) + '\n'
+);
 fs.writeFileSync(path.join(output, 'resources.json'), JSON.stringify({ schemaVersion: 1, resources }, null, 2) + '\n');
 fs.copyFileSync('LICENSE.md', 'public/LICENSE.md');
 fs.writeFileSync(
@@ -116,6 +145,10 @@ fs.appendFileSync(
   '\n## Motion Prompts\nMotion Prompts entries link to official public metadata and prompt snapshots under /motion-prompts/. Thirty prompts are full public text; 218 are official excerpts only. Respect prompt.access and never treat excerpts as full prompts. This distribution does not include component source or copied media. Interactive demos open on motionprompts.dev; cross-site embedding is not supported. Preview images/videos remain upstream. License: /motion-prompts/LICENSE.txt (PolyForm Noncommercial 1.0.0 with attribution). Credit: https://motionprompts.dev . No invented or independently validated model-generation result is claimed.\n'
 );
 console.log(`Exported ${items.length} entries across React Bits and Motion Prompts.`);
+fs.appendFileSync(
+  'public/llms.txt',
+  '\n## Discovery and application guidance\n/personal-registry/discovery.json contains bilingual subcategories, faceted traits and editorial what/where/why guidance for every entry. Trait basis distinguishes source metadata from application suggestions and catalog availability. Guidance is not an original reproduction prompt or a claim of verified behavior. Intent search uses local synonym matching and relevance ranking; no model calls are made.\n'
+);
 fs.appendFileSync(
   'public/llms.txt',
   '\n## Open libraries and source directory\nMotionVault: 202 original recreation prompts and source bundles, isolated React 19 previews. Shadcn Studio: 637 MIT registry source bundles; original prompts are not included. shadcn.io: 75 official README reference links, not component source. Follow source-specific MIT licenses under /open-libraries/. /personal-registry/resources.json lists 16 website-level references and access boundaries separately from imported entries. Recreation prompts, source integration, visual intent and install instructions are different kinds. No model reproduction claim is made.\n'

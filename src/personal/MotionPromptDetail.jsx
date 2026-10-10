@@ -1,3 +1,4 @@
+import ItemGuide from './discovery/ItemGuide';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowUpRight, Download, Heart, Info, Play, RotateCcw, Sparkles } from 'lucide-react';
@@ -121,6 +122,7 @@ export default function MotionPromptDetail({ item, saved, toggleSaved }) {
         </span>
         <span>{t('个人非商业使用', 'Personal noncommercial use')}</span>
       </div>
+      <ItemGuide item={item} />
       <div className="uie-detail-tabs" role="tablist" aria-label={t('设计详情', 'Design details')}>
         {[
           ['preview', t('设计预览', 'Design preview'), Play],

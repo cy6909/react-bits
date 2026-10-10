@@ -136,6 +136,7 @@ try {
   await page.goto(`${base}/?source=personal-ai`);
   await page.getByRole('heading', { name: /探索组件.*7/ }).waitFor();
   assert.equal(await page.locator('.uie-card').count(), 7);
+  await page.getByRole('combobox', { name: '搜索方式' }).selectOption('keyword');
   await page.getByRole('textbox', { name: '搜索组件' }).fill('票根');
   await page.waitForFunction(() => document.querySelectorAll('.uie-card').length === 1);
   await page.getByRole('button', { name: '收藏 拖动展开票根', exact: true }).click();

@@ -1323,5 +1323,205 @@
     height: 580px;
   }
 }
-.uie-resource-page h1 { font-size:clamp(26px,3vw,36px);font-weight:500;letter-spacing:-.03em;margin:12px 0 16px; }
-.uie-resource-page>.uie-detail-description { margin-bottom:24px;line-height:1.8; }
+.uie-resource-page h1 {
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin: 12px 0 16px;
+}
+.uie-resource-page > .uie-detail-description {
+  margin-bottom: 24px;
+  line-height: 1.8;
+}
+/* Discovery uses the same quiet violet hierarchy as the collection. */
+.uie-category-tree > a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  color: #aaa6b5;
+  text-decoration: none;
+}
+.uie-category-tree > a > span:last-child {
+  margin-left: auto;
+  font-size: 13px;
+  color: #827c90;
+}
+.uie-category-tree > a.active {
+  background: #241d34;
+  color: #d1baff;
+}
+.uie-subnav {
+  margin: 4px 0 12px 23px;
+  padding-left: 13px;
+  border-left: 1px solid #30283d;
+}
+.uie-subnav a {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  color: #aaa6b5;
+  font-size: 12px;
+  text-decoration: none;
+  border-radius: 7px;
+}
+.uie-subnav a[aria-current='page'],
+.uie-subnav a:hover {
+  color: #d1baff;
+  background: #211a2b;
+}
+.uie-discovery-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 16px 0 10px;
+}
+.uie-discovery-filters label {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: #aaa6b5;
+  font-size: 12px;
+}
+.uie-discovery-filters select {
+  max-width: 240px;
+  padding: 8px 12px;
+  border: 1px solid #302b3a;
+  border-radius: 8px;
+  background: #17141e;
+  color: #d8d4e0;
+}
+.uie-discovery-filters button,
+.uie-search-help button {
+  border: 1px solid #302b3a;
+  border-radius: 8px;
+  padding: 7px 10px;
+  color: #c0b6d2;
+  background: #17141e;
+  font-size: 12px;
+  cursor: pointer;
+}
+.uie-search-help {
+  margin: 12px 0 22px;
+  color: #938a9f;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.uie-search-help > div {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.uie-card-guide {
+  padding: 0 18px 18px;
+}
+.uie-card-guide > p {
+  margin: 0 0 12px;
+  color: #a8a0b3;
+  font-size: 12px;
+  line-height: 1.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.uie-feature-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.uie-feature-tags a,
+.uie-feature-tags button {
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #bdb0ce;
+  border: 1px solid #332a40;
+  background: #1c1725;
+  border-radius: 6px;
+  padding: 3px 7px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.uie-feature-tags a:hover,
+.uie-feature-tags button:hover {
+  border-color: #a28ad0;
+  color: #e5d6ff;
+}
+.uie-match-reasons {
+  display: block;
+  margin-top: 12px;
+  color: #b49cde;
+  font-size: 11px;
+}
+.uie-item-guide {
+  border: 1px solid #302938;
+  background: #131017;
+  padding: 18px 20px;
+  border-radius: 14px;
+  margin: 20px 0;
+  color: #b5acbe;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.uie-guide-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.uie-guide-heading strong {
+  color: #e2d8ed;
+}
+.uie-guide-heading a {
+  color: #b59bdc;
+  font-size: 12px;
+  text-decoration: none;
+}
+.uie-item-guide > p {
+  margin: 10px 0 12px;
+}
+.uie-item-guide details {
+  margin-top: 14px;
+  border-top: 1px solid #302938;
+  padding-top: 12px;
+}
+.uie-item-guide summary {
+  cursor: pointer;
+  color: #cbb3ed;
+}
+.uie-item-guide dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.uie-item-guide dt {
+  color: #ded3eb;
+  font-weight: 600;
+}
+.uie-item-guide dd {
+  margin: 5px 0 0;
+}
+.uie-item-guide small {
+  color: #8e839b;
+}
+@media (max-width: 700px) {
+  .uie-item-guide dl {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .uie-toolbar {
+    flex-wrap: wrap;
+  }
+  .uie-toolbar .uie-search {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+  .uie-discovery-filters select {
+    max-width: 190px;
+  }
+}

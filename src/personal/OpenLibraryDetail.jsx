@@ -1,3 +1,4 @@
+import ItemGuide from './discovery/ItemGuide';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Download, Heart, RotateCcw } from 'lucide-react';
@@ -70,6 +71,7 @@ export default function OpenLibraryDetail({ item, saved, toggleSaved }) {
             : t('原站链接索引', 'Upstream link index')}
         </span>
       </div>
+      <ItemGuide item={item} />
       <div className="uie-detail-tabs" role="tablist">
         {[
           ['preview', t('效果预览', 'Preview')],

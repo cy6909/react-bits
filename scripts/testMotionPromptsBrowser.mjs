@@ -7,29 +7,45 @@ const { chromium } = require('playwright');
 const base = process.env.UIE_BASE_URL || 'http://10.89.2.12:18120';
 const out = path.resolve(process.env.UIE_EVIDENCE_DIR || 'test-results/motion-prompts');
 fs.mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+const browser = await chromium.launch({
+  executablePath: '/usr/bin/google-chrome',
+  headless: true,
+  args: ['--no-sandbox', '--disable-dev-shm-usage']
+});
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
-const errors = []; const checks = [];
+const errors = [];
+const checks = [];
 page.on('pageerror', e => errors.push(e.message));
-const pass = text => { checks.push(text); console.log(`PASS ${text}`); };
+const pass = text => {
+  checks.push(text);
+  console.log(`PASS ${text}`);
+};
 try {
   await page.goto(`${base}/?source=motion-prompts`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: /探索组件.*248/ }).waitFor();
   assert.equal(await page.locator('.uie-card').count(), 24);
   assert.equal(await page.getByRole('button', { name: /^Motion Prompts/ }).getAttribute('aria-pressed'), 'true');
-  await page.waitForFunction(() => Array.from(document.querySelectorAll('.uie-card .uie-poster')).slice(0, 3).every(img => img.complete && img.naturalWidth > 0));
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll('.uie-card .uie-poster'))
+      .slice(0, 3)
+      .every(img => img.complete && img.naturalWidth > 0)
+  );
   await page.screenshot({ path: path.join(out, 'motion-catalog.png'), fullPage: false });
   pass('248 entries in the shared styled catalog, source filter selected');
   await page.getByRole('combobox', { name: '提示词范围' }).selectOption('full');
   await page.getByRole('heading', { name: /探索组件.*30/ }).waitFor();
   await page.reload({ waitUntil: 'domcontentloaded' });
   assert.equal(await page.getByRole('combobox', { name: '提示词范围' }).inputValue(), 'full');
+  await page.getByRole('combobox', { name: '搜索方式' }).selectOption('keyword');
   await page.getByRole('textbox', { name: '搜索组件' }).fill('3D 滚动隧道');
   await page.waitForFunction(() => document.querySelectorAll('.uie-card').length === 1);
   await page.getByRole('button', { name: '收藏 3D 滚动隧道', exact: true }).click();
   await page.reload({ waitUntil: 'domcontentloaded' });
-  assert.equal(await page.getByRole('button', { name: '取消收藏 3D 滚动隧道', exact: true }).getAttribute('aria-pressed'), 'true');
+  assert.equal(
+    await page.getByRole('button', { name: '取消收藏 3D 滚动隧道', exact: true }).getAttribute('aria-pressed'),
+    'true'
+  );
   pass('Full-only filter, Chinese search, URL state and Motion Prompts favorites persist');
   await page.goto(`${base}/?source=motion-prompts&category=ScrollEffects`, { waitUntil: 'domcontentloaded' });
   await page.getByRole('heading', { name: /滚动叙事.*71/ }).waitFor();
@@ -51,7 +67,9 @@ try {
   assert.equal(await demo.getAttribute('target'), '_blank');
   assert.equal(await demo.getAttribute('href'), 'https://motionprompts.dev/components/3d-scroll-tunnel/index.html');
   await page.getByRole('button', { name: '从头播放' }).click();
-  await page.waitForFunction(() => document.querySelector('.uie-motion-stage video')?.currentTime > .3, null, { timeout: 20000 });
+  await page.waitForFunction(() => document.querySelector('.uie-motion-stage video')?.currentTime > 0.3, null, {
+    timeout: 20000
+  });
   await page.screenshot({ path: path.join(out, 'motion-preview.png'), fullPage: true });
   await page.getByRole('tab', { name: '原版提示词', exact: true }).click();
   assert.equal(await page.locator('.uie-motion-stage video').count(), 0);
@@ -91,6 +109,11 @@ try {
   fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ status: 'passed', checks, errors }, null, 2));
 } catch (error) {
   await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true });
-  fs.writeFileSync(path.join(out, 'result.json'), JSON.stringify({ status: 'failed', checks, errors, error: error.message }, null, 2));
+  fs.writeFileSync(
+    path.join(out, 'result.json'),
+    JSON.stringify({ status: 'failed', checks, errors, error: error.message }, null, 2)
+  );
   throw error;
-} finally { await browser.close(); }
+} finally {
+  await browser.close();
+}
